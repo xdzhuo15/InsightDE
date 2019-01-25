@@ -15,7 +15,7 @@ import pandas as pd
 producer = KafkaProducer(bootstrap_servers = ['localhost:9092'])
 
 #creates bucket that points to data
-session = boto3.resource('s3', aws_access_key_id = 'AWS_ACCESS_KEY_ID', aws_secret_access_key = 'AWS_SECRET_ACCESS_KEY')
+session = boto3.Session('s3', aws_access_key_id = 'AWS_ACCESS_KEY_ID', aws_secret_access_key = 'AWS_SECRET_ACCESS_KEY')
 s3 = session.client('s3')
 obj = s3.get_object(Bucket='microsoftpred', Key='test.csv')
 
