@@ -17,12 +17,12 @@ producer = KafkaProducer(bootstrap_servers = ['localhost:9092'])
 #creates bucket that points to data
 s3 = boto3.resource('s3', aws_access_key_id = 'AWS_ACCESS_KEY_ID', aws_secret_access_key = 'AWS_SECRET_ACCESS_KEY')
 bucket = s3.Bucket('microsoftpred')
-obj = bucket.get_object(Key='test.csv')
+obj = bucket.object(Key='test.csv')
 
 data = pd.read_csv(obj)
 
 #read through each line of csv and send the line to the kafka topic
 for index, row in data.iterrows():
-    producer.send('rawDBGData', value=row)
+    producer.send('DeviceRecord', value=row)
     time.sleep(1)
  
