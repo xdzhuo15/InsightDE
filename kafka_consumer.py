@@ -9,7 +9,7 @@ Created on Wed Jan 23 12:55:30 2019
 from kafka import KafkaConsumer
 
 consumer = KafkaConsumer(
-    'rawDBGData',
+    'DeviceRecord',
      bootstrap_servers=['localhost:9092'],
      auto_offset_reset='earliest',
      enable_auto_commit=True,
