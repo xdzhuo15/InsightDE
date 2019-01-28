@@ -10,6 +10,8 @@ import time
 import boto3
 import pandas as pd
 
+# need to combine header for each message
+
 
 #create Kafka producer that communicates with master node of ec2 instance running Kafka
 producer = KafkaProducer(bootstrap_servers = ['localhost:9092'])
@@ -19,12 +21,22 @@ s3 = boto3.resource('s3', aws_access_key_id = 'AWS_ACCESS_KEY_ID', aws_secret_ac
 bucket = s3.Bucket('microsoftpred')
 for obj in bucket.objects.all():
     if obj.key == 'test.csv':
-        test_obj = obj
+        test_obj = obj     
 
 data = pd.read_csv(test_obj)
 
-#read through each line of csv and send the line to the kafka topic
-for index, row in data.iterrows():
-    producer.send('DeviceRecord', value=row)
-    time.sleep(1)
- 
+#Get a random line as user
+n_data = length(data)
+
+def user_data(N):
+    index = []
+    for i in range(N):
+        index.append(random.randint(1,n_data+1))
+        rows = data[index]
+        producer.send('DeviceRecord', value=rows)
+        time.sleep(1)
+    
+# simulate multiple users  
+if __name__ == "__main__":  
+    N = 1000
+    user_data(N)
