@@ -21,8 +21,8 @@ conf = SparkConf().setAppName("prediction").setMaster(
 sc = SparkContext(conf=conf)
 ssc = StreamingContext(sc, 2)
 
-kafka_stream = KafkaUtils.createStream(ssc, 
-     ["DeviceRecord"], {"metadata.broker.list": "localhost:9092"})
+kafka_stream = KafkaUtils.createStream(ssc, "ec2-35-166-81-140.us-west-2.compute.amazonaws.com:2181", 
+     ["DeviceRecord"], {"user.input": "localhost:9092"})
 
 kafka_stream.printSchema()
 kafka_stream.select('AvSigVersion','IsBeta','CityIdentifier').show()
