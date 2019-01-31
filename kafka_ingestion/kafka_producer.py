@@ -9,34 +9,39 @@ from kafka import KafkaProducer
 import time
 import boto3
 import pandas as pd
+import random
+from stream_schema import Schema
+from pyspark.sql.types import *
 
-# need to combine header for each message
+# no need to combine header for each message
 
+file_name = 'test_2000.csv'
+
+s3 = boto3.resource('s3')
+bucket = s3.Bucket('microsoftpred')
+test_obj = s3.Object(bucket, file_name)
 
 #create Kafka producer that communicates with master node of ec2 instance running Kafka
 producer = KafkaProducer(bootstrap_servers = ['localhost:9092'])
 
-#creates bucket that points to data
-s3 = boto3.resource('s3', aws_access_key_id = 'AWS_ACCESS_KEY_ID', aws_secret_access_key = 'AWS_SECRET_ACCESS_KEY')
-bucket = s3.Bucket('microsoftpred')
-for obj in bucket.objects.all():
-    if obj.key == 'test.csv':
-        test_obj = obj     
+data = pd.read_csv(test_obj, index_col=0, schema = Schema)
 
-data = pd.read_csv(test_obj)
-
-#Get a random line as user
-n_data = length(data)
-
-def user_data(N):
-    index = []
+#simulator that generate N numbers of messages at 1-M random volumes
+def user_data(data, N):
+    n_data = len(data)
     for i in range(N):
-        index.append(random.randint(1,n_data+1))
-        rows = data[index]
+        #M = random.randint(0,n_data)
+        M = 100
+        index = random.sample(range(0,n_data), M)
+        rows = data.loc[index]
         producer.send('DeviceRecord', value=rows)
+        producer.flush()
         time.sleep(1)
     
 # simulate multiple users  
 if __name__ == "__main__":  
-    N = 1000
-    user_data(N)
+    N = 10
+    user_data(data, N)
+    
+    
+
