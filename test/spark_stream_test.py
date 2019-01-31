@@ -6,23 +6,23 @@ Created on Wed Jan 30 12:07:24 2019
 @author: xdzhuo
 """
 
-from kafka_ingestion import stream_schema
 from pyspark.streaming.kafka import KafkaUtils
 from pyspark import SparkContext
 from pyspark.streaming import StreamingContext
-import lightbgm as lgb
 import os
 from pyspark import SparkConf
 from pyspark.sql import SQLContext, SparkSession, Row, Column
 from pyspark.sql.types import *
-import datetime
-import data_process
 
-conf = SparkConf().setAppName("prediction").setMaster(1)
+
+conf = SparkConf().setAppName("prediction").setMaster(
+        "spark://ec2-52-10-44-193.us-west-2.compute.amazonaws.com:7077"
+        )
 sc = SparkContext(conf=conf)
 ssc = StreamingContext(sc, 2)
 
 kafka_stream = KafkaUtils.createStream(ssc, 
-     ["DeviceRecord"], {"metadata.broker.list": brokers})
+     ["DeviceRecord"], {"metadata.broker.list": "localhost:9092"})
 
-print kafka_stream
+kafka_stream.printSchema()
+kafka_stream.select('AvSigVersion','IsBeta','CityIdentifier').show()
