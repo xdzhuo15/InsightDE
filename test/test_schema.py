@@ -10,6 +10,7 @@ from pyspark.sql.types import *
 # Defined on the true meaning of the data one by one
 
 Schema = StructType([
+    StructField("CSVId", IntegerType()),
     StructField("MachineIdentifier", StringType()),     
     StructField("EngineVersion", StringType()),
     StructField("AvSigVersion", StringType()),

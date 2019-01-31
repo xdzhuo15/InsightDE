@@ -20,9 +20,11 @@ s3 = boto3.resource('s3')
 bucket = s3.Bucket('microsoftpred')
 test_obj = s3.Object(bucket, file_name)
 
-conf = SparkConf().setAppName('training').setMaster(1)
-sc = SparkContext(conf=conf)
+conf = SparkConf().setAppName('training').setMaster("spark://ec2-52-10-44-193.us-west-2.compute.amazonaws.com:7077")
+# sc = SparkContext(conf=conf)
+spark = SparkSession.builder.appName('training').getOrCreate()
 
-df = conf.read.csv(file_name, header=True, schema=Schema)
-for i in range(10):
-    print df.loc[i]
+df = spark.read.csv(file_name, header=True, schema=Schema)
+df.printSchema()
+df.select('AvSigVersion','IsBeta','CityIdentifier').show()
+
