@@ -31,8 +31,10 @@ for i in range(11):
     # can only send one line each time
     row = data.loc[i]
     producer.send("DeviceRecord",row.to_json())
-    producer.flush()
-    time.sleep(10)
+    time.sleep(0.5)
+    
+producer.flush()
+    
 
     
     
