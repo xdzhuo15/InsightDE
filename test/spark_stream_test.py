@@ -14,15 +14,29 @@ from pyspark import SparkConf
 from pyspark.sql import SQLContext, SparkSession, Row, Column
 from pyspark.sql.types import *
 
-
 conf = SparkConf().setAppName("prediction").setMaster(
         "spark://ec2-52-10-44-193.us-west-2.compute.amazonaws.com:7077"
         )
+
 sc = SparkContext(conf=conf)
-ssc = StreamingContext(sc, 2)
+sc.setLogLevel("WARN")
 
-kafka_stream = KafkaUtils.createStream(ssc, "ec2-35-166-81-140.us-west-2.compute.amazonaws.com:2181", 
-     ["DeviceRecord"], {"user.input": "localhost:9092"})
+ssc = StreamingContext(sc, 5)
 
-kafka_stream.printSchema()
-kafka_stream.select('AvSigVersion','IsBeta','CityIdentifier').show()
+kafka_stream = KafkaUtils.createDirectStream(ssc, 
+     ["DeviceRecord"], {"metadata.broker.list":"ip-10-0-0-7:9092,ip-10-0-0-11:9092,ip-10-0-0-10:9092"})
+
+#lines = kafka_stream.map(lambda x: x[1])
+
+print 'Event recieved in window!!!!!!: ', kafka_stream.pprint()
+
+ssc.start()
+ssc.awaitTermination()
+
+
+#df = 
+#df.schema()
+#lines.select("AvSigVersion", "IsBeta") \
+#	.write \
+#	.save("namesAndAges.json",format="json")
+#kafka_stream.select('AvSigVersion','IsBeta','CityIdentifier').show()
