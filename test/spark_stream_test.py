@@ -21,13 +21,16 @@ def handler(message):
     len(records)
     
 
-def convert_json2df(rdd,Schema):
+def convert_json2df(rdd):
     ss = SparkSession(rdd.context)
     if rdd.isEmpty():
         return
-    df = ss.createDataFrame(rdd, schema=Schema)
+    #test = rdd.first()
+    #print type(test)
+    df = ss.createDataFrame(rdd)
     df.show()    
-   
+    df.select("IsBeta").show()
+    df.printSchema()
 
 conf = SparkConf().setAppName("prediction").setMaster(
         "spark://ec2-52-10-44-193.us-west-2.compute.amazonaws.com:7077"
@@ -41,15 +44,15 @@ ssc = StreamingContext(sc, 5)
 kafka_stream = KafkaUtils.createDirectStream(ssc, 
     ["DeviceRecord"], {"metadata.broker.list":"ip-10-0-0-7:9092,ip-10-0-0-11:9092,ip-10-0-0-10:9092"})
 
-#lines = kafka_stream.map(lambda x: x[1])
+#kafka_stream = kafka_stream.map(lambda x: x[1])
 
-kafka_stream = kafka_stream.map(lambda x: x.decode("utf-8"))
+#kafka_stream = kafka_stream.map(lambda x: x.decode("utf-8"))
 
-#kafka_stream = kafka_stream.map(lambda (key, value): json.loads(value))
+kafka_stream = kafka_stream.map(lambda (key, value): json.loads(value))
 
-cols=["MachineIdentifier","EngineVersion","AvSigVersion","IsBeta","CityIdentifier"]
+#cols=["MachineIdentifier","EngineVersion","AvSigVersion","IsBeta","CityIdentifier"]
 
-kafka_stream.foreachRDD(lambda x: convert_json2df(x, cols))
+kafka_stream.foreachRDD(lambda x: convert_json2df(x))
 
 print 'Event recieved in window!!!!!!: '
 
