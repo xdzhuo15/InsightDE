@@ -37,34 +37,23 @@ sc = SparkContext(conf=conf)
 sc.setLogLevel("WARN")
 
 ssc = StreamingContext(sc, 5)
-#set up check point
-#ssc.checkpoint(checkpointDirectory)
 
 kafka_stream = KafkaUtils.createDirectStream(ssc, 
     ["DeviceRecord"], {"metadata.broker.list":"ip-10-0-0-7:9092,ip-10-0-0-11:9092,ip-10-0-0-10:9092"})
+
 #lines = kafka_stream.map(lambda x: x[1])
 
-#kafka_stream = kafka_stream.map(lambda x: x.decode("utf-8"))
+kafka_stream = kafka_stream.map(lambda x: x.decode("utf-8"))
 
-kafka_stream = kafka_stream.map(lambda (key, value): json.loads(value))
+#kafka_stream = kafka_stream.map(lambda (key, value): json.loads(value))
 
 cols=["MachineIdentifier","EngineVersion","AvSigVersion","IsBeta","CityIdentifier"]
 
 kafka_stream.foreachRDD(lambda x: convert_json2df(x, cols))
 
-#kafka_stream.foreachRDD(handler)
-print 'Event recieved in window!!!!!!: ', kafka_stream.pprint()
-#kafka_stream.select('AvSigVersion','IsBeta','CityIdentifier').show()
-#df = sc.createDataFrame(kafka_stream)
-#kafka_stream = ssc.union(kafka_stream)
-
-#kafka_stream.pprint()
-#parsed = kafka_stream.map(lambda x: json.loads(x[1]))
-
-
-#kafka_stream.foreachRDD(process)
+print 'Event recieved in window!!!!!!: '
 
 ssc.start()
 ssc.awaitTermination()
 
-#kafka_stream.select('AvSigVersion','IsBeta','CityIdentifier').show()
+
