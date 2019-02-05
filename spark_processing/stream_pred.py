@@ -5,7 +5,6 @@ Created on Thu Jan 24 23:28:51 2019
 
 @author: xdzhuo
 """
-from kafka_ingestion import stream_schema
 from pyspark.streaming.kafka import KafkaUtils
 from pyspark import SparkContext
 from pyspark.streaming import StreamingContext
@@ -15,15 +14,36 @@ from pyspark import SparkConf
 from pyspark.sql import SQLContext, SparkSession, Row, Column
 from pyspark.sql.types import *
 import datetime
-import data_process
+from batch_train import *
+import json
 
-# os.environ["PYSPARK_PYTHON"]="/usr/bin/python3"
-# os.environ["PYSPARK_DRIVER_PYTHON"]="/usr/bin/python3"
+# Replace NULL category with Empty (steaming only )
+# Map to count values
+def clean_category(features):
+    categorical_cols = [] 
+    numerical_cols = []
+    para_json = read_file("PR")
+    if para_json != {}: 
+        for key in para_json.keys():
+            if para_json[key] == {}:
+                numerical_cols.append(key)
+            else:
+                col = key.replace("_encoded","")
+                if col in features.columns:
+                    one_col = features.select(col).na.fill("Empty")
+                    mapped_col=one_col.cast(StringType).na.replace(para_json[key], 1)
+                    features.withColumn(col+"_mapped",mapped_col)
+                    categorical_cols.append(col)
+    return categorical_cols, numerical_cols
 
-# load the latest model
+def convert_json2df(rdd):
+    ss = SparkSession(rdd.context)
+    if rdd.isEmpty():
+        return
+    df = ss.createDataFrame(rdd)
+
 def load_oldest_model(path):
     time_now = datetime.datetime.now()
-    # covert file name back to time, sorting
     try:
         for item[1].startswith("string"):
             sg = filename_convert()
@@ -35,13 +55,6 @@ def join_data( data1, data2):
 def save_pred(data, path, target_table):
     target_table,append(data)
     
-    
-conf = SparkConf().setAppName("prediction").setMaster(1)
-sc = SparkContext(conf=conf)
-ssc = StreamingContext(sc, 2)
-
-kafka_stream = KafkaUtils.createStream(ssc, 
-     ["DeviceRecord"], {"metadata.broker.list": brokers})
 
 #convert kafka into dataframe
 
@@ -63,3 +76,21 @@ save_pred( final_data, SQL_CONNECTION, "Prediction_table")
 # connect to flask for UI 4 charts
 
 # combine data with prediction and save to mysql
+
+def main():
+    conf = SparkConf().setAppName("prediction").setMaster(
+            "spark://ec2-52-10-44-193.us-west-2.compute.amazonaws.com:7077"
+            )
+    sc = SparkContext(conf=conf)
+    sc.setLogLevel("WARN")
+    ssc = StreamingContext(sc, 5)
+    kafka_stream = KafkaUtils.createDirectStream(ssc, ["DeviceRecord"], 
+            {"metadata.broker.list":"ip-10-0-0-7:9092,ip-10-0-0-11:9092,ip-10-0-0-10:9092"})    
+    kafka_stream.map(lambda (key, value): json.loads(value))
+    kafka_stream = get_kafkastream()
+    kafka_stream.foreachRDD(lambda x: convert_json2df(x))
+    ssc.start()
+    ssc.awaitTermination()
+    
+if __init__ == "__main__":
+    main()    

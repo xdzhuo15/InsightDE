@@ -25,7 +25,6 @@ test_obj = s3.Object(bucket, file_name)
 producer = KafkaProducer(bootstrap_servers = "localhost:9092")
 
 data = pd.read_csv(test_obj.key, index_col=0 )
-lable = list(data)
 
 for i in range(11):
     # can only send one line each time

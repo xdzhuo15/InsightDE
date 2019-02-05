@@ -7,39 +7,30 @@ This is a temporary script file.
 
 from kafka import KafkaProducer
 import time
-import boto3
 import pandas as pd
 import random
-from stream_schema import Schema
-from pyspark.sql.types import *
+from spark_processing.batch_train import read_s3
 
-# no need to combine header for each message
+File_name = "test_2000.csv"
+Bucket_name = "microsoftpred"
 
-file_name = 'test_2000.csv'
-
-s3 = boto3.resource('s3')
-bucket = s3.Bucket('microsoftpred')
-test_obj = s3.Object(bucket, file_name)
-
-#create Kafka producer that communicates with master node of ec2 instance running Kafka
-producer = KafkaProducer(bootstrap_servers = ['localhost:9092'])
-
-data = pd.read_csv(test_obj, index_col=0, schema = Schema)
-
-#simulator that generate N numbers of messages at 1-M random volumes
+#simulator that generates N numbers of messages at 1-M random volumes
 def user_data(data, N):
     n_data = len(data)
     for i in range(N):
         #M = random.randint(0,n_data)
         M = 100
-        index = random.sample(range(0,n_data), M)
-        rows = data.loc[index]
-        producer.send('DeviceRecord', value=rows)
+        for j in range(M):
+            index = random.randint(0, n_data-1)
+            row = data.loc[index]
+            producer.send('DeviceRecord', row.to_json())
         producer.flush()
         time.sleep(1)
     
-# simulate multiple users  
-if __name__ == "__main__":  
+if __name__ == "__main__":     
+    producer = KafkaProducer(bootstrap_servers = "localhost:9092")    
+    test_data = read_s3(File_name, Bucket_name)      
+    data = pd.read_csv(test_data, index_col=0 )   
     N = 10
     user_data(data, N)
     
