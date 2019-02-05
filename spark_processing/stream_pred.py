@@ -8,13 +8,11 @@ Created on Thu Jan 24 23:28:51 2019
 from pyspark.streaming.kafka import KafkaUtils
 from pyspark import SparkContext
 from pyspark.streaming import StreamingContext
-import lightbgm as lgb
-import os
 from pyspark import SparkConf
 from pyspark.sql import SQLContext, SparkSession, Row, Column
 from pyspark.sql.types import *
-import datetime
-from batch_train import *
+from time_track import *
+from io_modules import *
 import json
 
 # Replace NULL category with Empty (steaming only )
@@ -41,13 +39,6 @@ def convert_json2df(rdd):
     if rdd.isEmpty():
         return
     df = ss.createDataFrame(rdd)
-
-def load_oldest_model(path):
-    time_now = datetime.datetime.now()
-    try:
-        for item[1].startswith("string"):
-            sg = filename_convert()
-    return modelname
 
 def join_data( data1, data2):
     

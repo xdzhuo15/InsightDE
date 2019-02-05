@@ -8,10 +8,6 @@ Created on Sat Jan 26 19:56:05 2019
 
 from train_schema import Schema
 import json
-import boto3
-import datetime
-import os
-import glob
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SQLContext, SparkSession, Row, Column
 from pyspark.sql.types import *
@@ -19,42 +15,16 @@ from pyspark.ml.feature import Imputer, VectorAssembler, MinMaxScaler
 from pyspark.ml.classification import LogisticRegression
 from pyspark.ml import Pipeline    
 from pyspark.ml.evaluation import BinaryClassificationEvaluator 
+from data_base import read_s3
+from time_track import *
+from io_modules import *
 
 # import training data from s3
-File_name = "train_5000.csv"
-Bucket_name = "microsoftpred"
-
-def read_s3(Filename, Bucketname):
-    s3 = boto3.resource('s3')
-    bucket = s3.Bucket(Bucketname)
-    Test_obj = s3.Object(bucket, File_name)
-    return Test_obj.key
+file_name = "train_5000.csv"
+bucket_name = "microsoftpred"
 
 def exclude_cols(df, exclude_key_list):
     return df.select([col for col in df.columns if col not in exclude_key_list])
-
-def encode_timestamp():
-    return unicode(datetime.datetime.now()).replace(" ","").replace(":","")
-
-def get_latestfile(Folder_path):
-    List_of_files = glob.glob(Folder_path+"/*") # * means all if need specific format then *.csv
-    Latest_file = max(List_of_files, key=os.path.getctime)
-    return Latest_file
-
-# ML: machine learning model, PR: mapped feature transformation    
-def read_file(File_type):
-    if File_type == "ML":
-        Folder_path = "hdfs:///model/"
-    elif File_type == "PR":
-        Folder_path = "hdfs:///para/"
-    data_file = Folder_path+get_latestfile(Folder_path)
-    try:
-        with open(data_file) as f:
-            para_json = json.load(f)
-        return para_json 
-    except:
-        print "No parameters or modles in place!"  
-        return {} 
     
 # Replace Null with Empty 
 def clean_category_train(features):
@@ -86,19 +56,14 @@ def map_category(features, categorical_cols, numerical_cols):
     timestamp = encode_timestamp()
     data_path = "hdfs:///para/feature_para_"+ timestamp+".json" 
     with open(data_path, 'w') as f:                   
-        json.dump(para_dict, f) 
-        
-def run_time(timestart):
-    timeend = datetime.datetime.now()
-    return round((timeend-timestart).total_seconds(), 2), timeend 
+        json.dump(para_dict, f)        
 
 def build_pipeline(features, categorical_cols, numerical_cols):
     stages = []
     for n_col in numerical_cols:
         impute = Imputer(inputCol = n_col, outputCol = n_col + "_cleaned")
     stages += [impute]
-    selected_cols = [ c + "_mapped" for c in categorical_cols ]
-                      + [ c + "_cleaned" for c in numerical_cols ]
+    selected_cols = [ c + "_mapped" for c in categorical_cols ]+[ c + "_cleaned" for c in numerical_cols ]
     for col in selected_cols:
         norm_feature = MinMaxScaler(inputCol = col, outputCol=col + "_norm")
     stages +=[norm_feature]
@@ -109,7 +74,7 @@ def build_pipeline(features, categorical_cols, numerical_cols):
 
 def main():
     timestart = datetime.datetime.now()    
-    train_data=read_s3(File_name, Bucket_name)
+    train_data=read_s3(file_name, bucket_name)
     conf = SparkConf().setAppName("training").setMaster(
             "spark://ec2-52-10-44-193.us-west-2.compute.amazonaws.com:7077"
             )
@@ -163,7 +128,7 @@ if __name__ == "__main__":
     main()
  
 
-SQL_CONNECTION="jdbc:mysql://localhost:3306/bigdata?user=root&password=pwd"
+#SQL_CONNECTION="jdbc:mysql://localhost:3306/bigdata?user=root&password=pwd"
 
 # Top 4 important features, export their label for prediction
 
