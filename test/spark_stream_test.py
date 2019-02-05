@@ -10,7 +10,7 @@ from pyspark.streaming.kafka import KafkaUtils
 from pyspark import SparkContext
 from pyspark.streaming import StreamingContext
 from pyspark import SparkConf
-#from pyspark.sql import SQLContext, SparkSession, Row, Column
+from pyspark.sql import SQLContext, SparkSession, Row, Column
 #from pyspark.sql.types import *
 import json
 
