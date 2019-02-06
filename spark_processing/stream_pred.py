@@ -16,6 +16,8 @@ from io_modules import *
 import json
 from schema import StreamSchema
 
+spark.debug.maxToStringFields=100
+
 # Replace NULL category with Empty (steaming only )
 # Map to count values
 def clean_category(features):

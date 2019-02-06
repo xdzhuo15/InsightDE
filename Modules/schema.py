@@ -64,7 +64,7 @@ Schema = StructType([
     StructField('Census_InternalPrimaryDisplayResolutionVertical', DoubleType()),
     StructField('Census_PowerPlatformRoleName', StringType()),
     StructField('Census_InternalBatteryType', StringType()),
-    StructField('Census_InternalBatteryNumberOfCharges', LongType()),
+    StructField('Census_InternalBatteryNumberOfCharges', DoubleType()),
     StructField('Census_OSVersion', StringType()),
     StructField('Census_OSArchitecture', StringType()),
     StructField('Census_OSBranch', StringType()),
