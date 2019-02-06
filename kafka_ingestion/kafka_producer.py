@@ -9,10 +9,6 @@ from kafka import KafkaProducer
 import time
 import pandas as pd
 import random
-from data_base import read_s3
-
-file_name = "test_2000.csv"
-bucket_name = "microsoftpred"
 
 #simulator that generates N numbers of messages at 1-M random volumes
 def user_data(data, N):
@@ -27,10 +23,10 @@ def user_data(data, N):
         producer.flush()
         time.sleep(1)
     
-if __name__ == "__main__":     
-    producer = KafkaProducer(bootstrap_servers = "localhost:9092")    
-    test_data = read_s3(file_name, bucket_name)      
-    data = pd.read_csv(test_data, index_col=0 )   
+if __name__ == "__main__":  
+    file_name = "test_2000.csv"
+    producer = KafkaProducer(bootstrap_servers = "localhost:9092")         
+    data = pd.read_csv(file_name, index_col=0 )   
     N = 10
     user_data(data, N)
     
