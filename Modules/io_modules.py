@@ -9,6 +9,7 @@ import os
 import glob
 import json
 from time_track import time_functions
+#from pyspark.sql import SQLContext
 
 def get_latestfile(folder_path):
     list_of_files = glob.glob(folder_path+"/*") # * means all if need specific format then *.csv
@@ -56,3 +57,28 @@ class PiplModel(IoObject):
         self.file_path = "hdfs:///pipeline/pipeline_model_"
         self.file_suf = ""
         
+def toMysql():
+    def __init__(self,data_frame, file_name):
+        self.data = data_frame
+        self.table = file_name
+        self.sql_url = "jdbc:mysql://localhost/database_name"
+        self.sql_driver = "com.mysql.jdbc.Driver"
+        self.usr = "your_user_name"
+        self.pss = "your_password"
+        
+    def save_tosql(self):
+        self.data.write.format("jdbc").options(
+          url=self.sql_url,
+          driver=self.sql_driver,
+          dbtable=self.table,
+          user=self.usr,
+          password=self.pss).mode("append").save()
+    
+    def load_frsql(self): 
+        # not need for spark, only query to flask
+        source_df = sqlContext.read.format("jdbc").options(
+        url=self.sql_url,
+        driver=self.sql_driver,
+        dbtable=self.table,
+        user=self.usr,
+        password=self.pss).load()
