@@ -22,7 +22,7 @@ Schema = StructType([
     StructField('DefaultBrowsersIdentifier', DoubleType()),
     StructField('AVProductStatesIdentifier', StringType()),
     StructField('AVProductsInstalled', ShortType()),
-    StructField('AVProductsEnabled', ShortType()),
+    StructField('AVProductsEnabled', DoubleType()),
     StructField('HasTpm', ShortType()),
     StructField('CountryIdentifier', StringType()),
     StructField('CityIdentifier', StringType()),                          
