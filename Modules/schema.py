@@ -37,7 +37,7 @@ Schema = StructType([
     StructField('OsBuildLab', StringType()),
     StructField('SkuEdition', StringType()),
     StructField('IsProtected', DoubleType()),
-    StructField('AutoSampleOptIn', DoubleType()),
+    StructField('AutoSampleOptIn', ShortType()),
     StructField('PuaMode', StringType()),
     StructField('SMode', DoubleType()),        
     StructField('IeVerIdentifier', StringType()),
