@@ -22,7 +22,7 @@ Schema = StructType([
     StructField('AVProductStatesIdentifier', StringType()),
     StructField('AVProductsInstalled', DoubleType()),
     StructField('AVProductsEnabled', DoubleType()),
-    StructField('HasTpm', DoubleType()),
+    StructField('HasTpm', ShortType()),
     StructField('CountryIdentifier', StringType()),
     StructField('CityIdentifier', StringType()),                          
     StructField('OrganizationIdentifier', StringType()),
