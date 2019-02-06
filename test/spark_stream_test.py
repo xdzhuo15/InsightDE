@@ -13,6 +13,7 @@ from pyspark import SparkConf
 from pyspark.sql import SQLContext, SparkSession, Row, Column
 #from pyspark.sql.types import *
 import json
+from schema import StreamSchema
 
 def handler(message):
     records = message.collect()
@@ -23,7 +24,7 @@ def convert_json2df(rdd):
     ss = SparkSession(rdd.context)
     if rdd.isEmpty():
         return
-    df = ss.createDataFrame(rdd)
+    df = ss.createDataFrame(rdd, schema=StreamSchema)
     df.show()    
     df.select("IsBeta").show()
     df.printSchema()

@@ -14,6 +14,7 @@ from pyspark.sql.types import *
 from time_track import *
 from io_modules import *
 import json
+from schema import StreamSchema
 
 # Replace NULL category with Empty (steaming only )
 # Map to count values
@@ -38,7 +39,7 @@ def convert_json2df(rdd):
     ss = SparkSession(rdd.context)
     if rdd.isEmpty():
         return
-    df = ss.createDataFrame(rdd)
+    df = ss.createDataFrame(rdd, schema = StreamSchema)
 
 def join_data( data1, data2):
     
@@ -51,18 +52,12 @@ def save_pred(data, path, target_table):
 
 # load saved parameters from mysql
 
-data_test = df.iloc[:,2:]
-features_test = data_clean.feature_engineering(data_test)
-label_est = lgbm.predict(features_test)
 
 # load model
-SQL_CONNECTION="jdbc:mysql://localhost:3306/bigdata?user=root&password=pwd"
-lbgm = lgb.load(modelname)
+#SQL_CONNECTION="jdbc:mysql://localhost:3306/bigdata?user=root&password=pwd"
+
 
 # Top 4 important features, read data from exported file
-feature_imp = data_process.top_features(lgbm, 4 )
-final_data = join_data( df, label_est )
-save_pred( final_data, SQL_CONNECTION, "Prediction_table")
 
 # connect to flask for UI 4 charts
 

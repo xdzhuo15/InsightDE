@@ -6,7 +6,7 @@ Created on Sat Jan 26 19:56:05 2019
 @author: xdzhuo
 """
 
-from train_schema import Schema
+from schema import Schema
 import json
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SQLContext, SparkSession, Row, Column

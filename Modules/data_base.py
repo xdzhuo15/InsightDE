@@ -7,8 +7,8 @@ Created on Tue Feb  5 12:11:23 2019
 """
 import boto3
 
-def read_s3(filename, bucketname):
+def read_s3(bucket_name, file_name):
     s3 = boto3.resource('s3')
-    bucket = s3.Bucket(bucketname)
+    bucket = s3.Bucket(bucket_name)
     test_obj = s3.Object(bucket, file_name)
     return test_obj.key
