@@ -70,10 +70,6 @@ def build_pipeline(features, categorical_cols, numerical_cols):
 
 def main():
     timestart = datetime.datetime.now()   
-    
-    # import training data from s3
-    file_name = "train_5000.csv"
-    bucket_name = "microsoftpred"
 
     s3 = boto3.resource("s3")
     bucket = s3.Bucket("microsoftpred")
@@ -84,7 +80,7 @@ def main():
             )
     sc = SparkContext(conf=conf)
     spark = SparkSession.builder.appName("training").getOrCreate()
-    df = spark.read.csv(test_obj.key, header=True, schema=Schema) 
+    df = spark.read.csv("s3a://microsoftpred/train_5000.csv", header=True, schema=Schema) 
     
     label = df.select("HasDetections")
     features = exclude_cols(df,["MachineIdentifier", "CSVId"])
