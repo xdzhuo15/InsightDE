@@ -15,7 +15,7 @@ from pyspark.ml.feature import Imputer, VectorAssembler, MinMaxScaler
 from pyspark.ml.classification import LogisticRegression
 from pyspark.ml import Pipeline    
 from pyspark.ml.evaluation import BinaryClassificationEvaluator 
-from data_base import read_s3
+import boto3
 from time_track import *
 from io_modules import *
 
@@ -75,13 +75,17 @@ def main():
     file_name = "train_5000.csv"
     bucket_name = "microsoftpred"
 
-    train_data=read_s3(bucket_name, file_name)
+    s3 = boto3.resource("s3")
+    bucket = s3.Bucket("microsoftpred")
+    test_obj = s3.Object(bucket, file_name)
+    
     conf = SparkConf().setAppName("training").setMaster(
             "spark://ec2-52-10-44-193.us-west-2.compute.amazonaws.com:7077"
             )
     sc = SparkContext(conf=conf)
     spark = SparkSession.builder.appName("training").getOrCreate()
-    df = spark.read.csv(train_data, header=True, schema=Schema) 
+    df = spark.read.csv(test_obj.key, header=True, schema=Schema) 
+    
     label = df.select("HasDetections")
     features = exclude_cols(df,["MachineIdentifier", "CSVId"])
     categorical_cols, numerical_cols = clean_category_train(features)
