@@ -68,7 +68,7 @@ Schema = StructType([
     StructField('Census_OSArchitecture', StringType()),
     StructField('Census_OSBranch', StringType()),
     StructField('Census_OSBuildNumber', StringType()),
-    StructField('Census_OSBuildRevision', DoubleType()),
+    StructField('Census_OSBuildRevision', LongType()),
     StructField('Census_OSEdition', StringType()),
     StructField('Census_OSSkuName', StringType()),
     StructField('Census_OSInstallTypeName', StringType()),
