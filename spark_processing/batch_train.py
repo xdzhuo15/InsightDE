@@ -18,58 +18,94 @@ from pyspark.ml.evaluation import BinaryClassificationEvaluator
 import boto3
 from time_track import *
 from io_modules import *
+from time_track import *
 
-def exclude_cols(df, exclude_key_list):
-    return df.select([col for col in df.columns if col not in exclude_key_list])
-    
-# Replace Null with Empty 
-def clean_category_train(features):
-    categorical_cols = []
-    numerical_cols = []
-    for col in features.columns:
-        data_type = col.dtypes
-        if data_type[1] == "StringType":
-            one_col = features.select(col).na.fill("Empty")
-            features.withColumn(col+"_encoded",one_col)
-            categorical_cols.append(col)
-        else:
-            numerical_cols.append(col)
-    return categorical_cols, numerical_cols
+
+class CleanData:
+    def __init__(self, data, exclude_key_list, is_train):
+        self.features = data
+        self.exclude_cols = exclude_key_list
+        # True or False
+        self.isTrain = is_train
         
-# Count disctinct for strings and save to HDFS json
-# Map count for categorical variables (training only )
-def map_category(features, categorical_cols, numerical_cols):  
-    para_dict = {}
-    for col in numerical_cols:
-        para_dict[col] = {}
-    for col in categorical_cols:
-        select_col = col + "_encoded"
-        one_col = features.select(select_col)
-        category_dict = one_col.grouBy().count() 
-        para_dict[select_col] = category_dict
-        mapped_col=one_col.na.replace(category_dict, 1)
-        features.withColumn(col+"_mapped",mapped_col)
-    timestamp = encode_timestamp()
-    data_path = "hdfs:///para/feature_para_"+ timestamp+".json" 
-    with open(data_path, 'w') as f:                   
-        json.dump(para_dict, f)        
-
-def build_pipeline(features, categorical_cols, numerical_cols):
-    stages = []
-    for n_col in numerical_cols:
-        impute = Imputer(inputCol = n_col, outputCol = n_col + "_cleaned")
-    stages += [impute]
-    selected_cols = [ c + "_mapped" for c in categorical_cols ]+[ c + "_cleaned" for c in numerical_cols ]
-    for col in selected_cols:
-        norm_feature = MinMaxScaler(inputCol = col, outputCol=col + "_norm")
-    stages +=[norm_feature]
-    finalized_cols = [ c + "_norm" for c in selected_cols ]
-    assembler = VectorAssembler(inputCols=selected_features, outputCol="features_vec")
-    stages +=[assembler]
-    return Pipeline(stages = stages)
+    def exclude_cols(self):
+        df = self.features
+        e_list = self.exclude_cols
+        self.remove_label = df.select([col for col in df.columns if col not in e_list])
+        return self.remove_label
+    
+    def count_cols(self):
+        train_data=self.remove_label
+        self.categorical_cols = []
+        self.numerical_cols = []
+        for types in train_data.dtypes:
+            if types[1] == "StringType":
+               self.categorical_cols.append(col)
+            else:
+                self.numerical_cols.append(col)
+        return self.categorical_cols, self.numerical_cols
+    
+    def fill_nullstring(self):
+        self.filter_category = self.remove_label
+        for col in self.categorical_cols:
+            one_col = self.remove_label.select(col).na.fill("Empty")
+            self.filter_category.withColumn(col+"_encoded",one_col)
+            return self.filter_category
+        
+    # Count disctinct for strings and save to HDFS json
+    # Map count for categorical variables            
+    def map_category_train(self):
+        para_dict = {}
+        self.mapped_t = self.filter_category
+        for col in self.categorical_cols:
+            select_col = col + "_encoded"
+            one_col = self.filter_category.select(select_col)
+            category_dict = one_col.grouBy().count()
+            para_dict[col] = category_dict
+            mapped_col=one_col.na.replace(category_dict, 1)
+            self.mapped_t.withColumn(col+"_mapped",mapped_col)
+        output = CountOutput()
+        with open(output.output_name(), 'w') as f:                   
+            json.dump(para_dict, f)  
+        return self.mapped_trn
+    
+    # Replace NULL category with Empty (steaming only )
+    # Map to count values        
+    def map_category_pred(self):
+        output = CountOutput()
+        para_json = output.read_file()
+        self.mapped_s=self.filter_category
+        if para_json != {}: 
+            for key in para_json.keys():
+                select_col = key + "_encoded"
+                one_col = self.mapped.select(select_col)
+                mapped_col=one_col.na.replace(para_json[key], 1)
+                self.mapped_s.withColumn(key+"_mapped",mapped_col)
+        return self.mapped_str
+       
+    def build_pipeline(self):
+        if self.isTrain == True:
+            self.final = self.mapped_trn
+        else:
+            self.final = self.mapped_str
+        stages = []
+        for n_col in self.numerical_cols:
+            impute = Imputer(inputCol = n_col, outputCol = n_col + "_cleaned")
+            stages += [impute]
+            selected_cols = [ c + "_mapped" for c in self.categorical_cols ]+[ c + "_cleaned" for c in self.numerical_cols ]
+        for col in selected_cols:
+            norm_feature = MinMaxScaler(inputCol = col, outputCol=col + "_norm")
+            stages +=[norm_feature]
+        self.finalized_cols = [ c + "_norm" for c in selected_cols ]
+        self.selected_features = self.final.select(self.finalized_cols)
+        assembler = VectorAssembler(inputCols=self.selected_features, outputCol="features_vec")
+        stages +=[assembler]
+        self.pipeline = Pipeline(stages = stages)
+        return self.pipeline
 
 def main():
-    timestart = datetime.datetime.now()   
+    time_func = time_functions()
+    timestart = time_func.now()   
 
     file_name = "train_5000.csv"
     s3 = boto3.resource("s3")
@@ -81,49 +117,54 @@ def main():
             )
     sc = SparkContext(conf=conf)
     spark = SparkSession.builder.appName("training").getOrCreate()
+    
     df = spark.read.csv("s3a://microsoftpred/{}".format(test_obj.key), header=True, schema=Schema) 
     
-    label = df.select("HasDetections")
-    features = exclude_cols(df,["MachineIdentifier", "CSVId"])
-    categorical_cols, numerical_cols = clean_category_train(features)
-    map_category(features, categorical_cols, numerical_cols)
+    exclude_key_list = ["MachineIdentifier", "CSVId", "HasDetections"]
+    labels = df.select("HasDetections")
+    features = CleanData(df, exclude_key_list, True)
+    clean_features = features.final()
     
-    features.cache()
-    features.count()
-    timedelta, timeend = run_time(timestart) 
+    clean_features.persist()
+    
+    timedelta, timeend = time_func.run_time(timestart) 
     print "Time taken to clean data: " + str(timedelta) + " seconds"
     
-    pipeline = build_pipeline(features, categorical_cols, numerical_cols)
-    final_cols = numerical_cols + [ c + "_mapped" for c in categorical_cols ]
-    features_final = features.select(final_cols)
-    train, test = features_final.randomSplit([0.7, 0.3], seed = 1000) 
+    clean_pipeline = features.pipeline()
+    pipelineModel = clean_pipeline.fit(clean_features)
+    transformed_features = pipelineModel.transform(clean_features)
+    
+    output = PiplModel()
+    pipelineModel.write.save(output.output_name())
+    
+    timedelta, timeend = time_func.run_time(timeend) 
+    print "Time taken to build pipeline: " + str(timedelta) + " seconds"
+        
+    selected_cols = [ "features_vec"] + features.finalized_cols()
+    training_data =  transformed_features.select(selected_cols)
+    training_data.withColumn(labels)
+    train, test = training_data.randomSplit([0.7, 0.3], seed = 1000) 
     print("Training Dataset Count: " + str(train.count()))
     print("Test Dataset Count: " + str(test.count()))
-    pipelineModel = pipeline.fit(features)
-    features = pipelineModel.transform(features)
-    
-    features.cache()
-    features.count()
-    timedelta, timeend = run_time(timeend) 
-    print "Time taken to built pipeline: " + str(timedelta) + " seconds"
-    
+        
     lr = LogisticRegression(featuresCol = "features_vec", labelCol = "HasDetections", 
                             maxIter=10, regParam=0.3, elasticNetParam=0.8 )
-    lrModel = lr.fit(train)
-    trainingSummary = lrModel.summary
+    lrModel = lr.fit(train)    
+    timedelta, timeend = time_func.run_time(timeend) 
+    print "Time taken to train the model: " + str(timedelta) + " seconds"
     
+    #trainingSummary = lrModel.summary    
     validation = lrModel.transform(test)
     evaluator = BinaryClassificationEvaluator()
     print('Test Area Under ROC', evaluator.evaluate(validation))
-    
-    timedelta, timeend = run_time(timeend) 
-    print "Time taken to train the model: " + str(timedelta) + " seconds"
-    
-    timestamp = encode_timestamp()
-    data_path = "hdfs:///model/lrm_model_"+ timestamp+".model"
-    lrModel.save(sc, data_path)
+
+    output = mlMOdel()
+    lrModel.save(sc, output.output_name())
     print("Coefficients: " + str(lrModel.coefficients))
-    # save df in sql
+    
+    # save df in sql (add original data)
+    productID = training_data.select("MachineIdentifier")
+    output_features.withColumn("MachineIdentifier", productID)
     # connect to flask for 4 charts of top features
     
 if __name__ == "__main__": 

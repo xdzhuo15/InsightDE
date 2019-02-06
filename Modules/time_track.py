@@ -7,12 +7,17 @@ Created on Tue Feb  5 12:18:26 2019
 """
 import datetime
 
-def encode_timestamp():
-    return unicode(datetime.datetime.now()).replace(" ","").replace(":","")
+class time_functions:
+    def __init__(self):
+        self.now = datetime.datetime.now()
+        self.prev = times_tart
+        
+    def encode_timestamp(self):
+        return unicode(self.now).replace(" ","").replace(":","")
 
-def run_time(timestart):
-    timeend = datetime.datetime.now()
-    return round((timeend-timestart).total_seconds(), 2), timeend 
+    def run_time(self,time_start):
+        timeend = self.now
+        return round((timeend-timestart).total_seconds(), 2), timeend 
 
 
 

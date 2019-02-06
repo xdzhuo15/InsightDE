@@ -15,49 +15,29 @@ from time_track import *
 from io_modules import *
 import json
 from schema import StreamSchema
+from batch_train import CleanData
+from pyspark.ml import Pipeline  
+from pyspark.ml.classification import LogisticRegression
 
-spark.debug.maxToStringFields=100
-
-# Replace NULL category with Empty (steaming only )
-# Map to count values
-def clean_category(features):
-    categorical_cols = [] 
-    numerical_cols = []
-    para_json = read_file("PR")
-    if para_json != {}: 
-        for key in para_json.keys():
-            if para_json[key] == {}:
-                numerical_cols.append(key)
-            else:
-                col = key.replace("_encoded","")
-                if col in features.columns:
-                    one_col = features.select(col).na.fill("Empty")
-                    mapped_col=one_col.cast(StringType).na.replace(para_json[key], 1)
-                    features.withColumn(col+"_mapped",mapped_col)
-                    categorical_cols.append(col)
-    return categorical_cols, numerical_cols
-
-def convert_json2df(rdd):
+def predict_risk(rdd, lfModel, pipelineModel):
     ss = SparkSession(rdd.context)
     if rdd.isEmpty():
         return
     df = ss.createDataFrame(rdd, schema = StreamSchema)
-
-
-#convert kafka into dataframe
-
-# load saved parameters from mysql
-
-
-# load model
-#SQL_CONNECTION="jdbc:mysql://localhost:3306/bigdata?user=root&password=pwd"
-
-
-# Top 4 important features, read data from exported file
-
-# connect to flask for UI 4 charts
-
-# combine data with prediction and save to mysql
+    
+    exclude_key_list = ["MachineIdentifier", "CSVId"]
+    
+    features = CleanData(df, exclude_key_list, False)
+    clean_features = features.final()
+    transformed_features = pipelineModel.transform(clean_features)
+    selected_cols = [ "features_vec"] + features.finalized_cols()
+    data = transformed_features.select(selected_cols)
+    prediction = lrModel.transform(data)
+    
+    # add original data!
+    productID = df.select("MachineIdentifier")
+    data.withColumn("MachineIdentifier", productID).withColumn("Detection",prediction)
+    # save to mysql
 
 def main():
     conf = SparkConf().setAppName("prediction").setMaster(
@@ -66,11 +46,18 @@ def main():
     sc = SparkContext(conf=conf)
     sc.setLogLevel("WARN")
     ssc = StreamingContext(sc, 5)
+    
+    #load saved pipeline, model, and parameters
+    lrModel = mlMOdel()
+    savedModel = LogisticRegressionModel.load(sc, model.data_file())
+    pipe = PiplModel()
+    pipelineModel = Pipeline.read.load(pipe.data_file())
+ 
     kafka_stream = KafkaUtils.createDirectStream(ssc, ["DeviceRecord"], 
             {"metadata.broker.list":"ip-10-0-0-7:9092,ip-10-0-0-11:9092,ip-10-0-0-10:9092"})    
     kafka_stream.map(lambda (key, value): json.loads(value))
     kafka_stream = get_kafkastream()
-    kafka_stream.foreachRDD(lambda x: convert_json2df(x))
+    kafka_stream.foreachRDD(lambda x: predict_risk(x))
     ssc.start()
     ssc.awaitTermination()
     
