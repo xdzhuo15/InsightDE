@@ -15,7 +15,7 @@ import json
 
 # no need to combine header for each message
 
-file_name = "data.csv"
+file_name = "test_2000.csv"
 
 s3 = boto3.resource("s3")
 bucket = s3.Bucket("microsoftpred")
