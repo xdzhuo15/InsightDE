@@ -19,10 +19,6 @@ from data_base import read_s3
 from time_track import *
 from io_modules import *
 
-# import training data from s3
-file_name = "train_5000.csv"
-bucket_name = "microsoftpred"
-
 def exclude_cols(df, exclude_key_list):
     return df.select([col for col in df.columns if col not in exclude_key_list])
     
@@ -73,8 +69,13 @@ def build_pipeline(features, categorical_cols, numerical_cols):
     return Pipeline(stages = stages)
 
 def main():
-    timestart = datetime.datetime.now()    
-    train_data=read_s3(file_name, bucket_name)
+    timestart = datetime.datetime.now()   
+    
+    # import training data from s3
+    file_name = "train_5000.csv"
+    bucket_name = "microsoftpred"
+
+    train_data=read_s3(bucket_name, file_name)
     conf = SparkConf().setAppName("training").setMaster(
             "spark://ec2-52-10-44-193.us-west-2.compute.amazonaws.com:7077"
             )

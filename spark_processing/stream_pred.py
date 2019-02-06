@@ -43,12 +43,6 @@ def convert_json2df(rdd):
         return
     df = ss.createDataFrame(rdd, schema = StreamSchema)
 
-def join_data( data1, data2):
-    
-# save to mysql
-def save_pred(data, path, target_table):
-    target_table,append(data)
-    
 
 #convert kafka into dataframe
 
