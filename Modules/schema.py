@@ -57,7 +57,7 @@ Schema = StructType([
     StructField('Census_PrimaryDiskTypeName', StringType()),
     StructField('Census_SystemVolumeTotalCapacity', IntegerType()),
     StructField('Census_HasOpticalDiskDrive', ShortType()),
-    StructField('Census_TotalPhysicalRAM', Integer()),
+    StructField('Census_TotalPhysicalRAM', IntegerType()),
     StructField('Census_ChassisTypeName', StringType()), 
     StructField('Census_InternalPrimaryDiagonalDisplaySizeInInches', DoubleType()),
     StructField('Census_InternalPrimaryDisplayResolutionHorizontal', IntegerType()),
