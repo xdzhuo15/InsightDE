@@ -87,7 +87,7 @@ Schema = StructType([
     StructField('Census_IsSecureBootEnabled', ShortType()),
     StructField('Census_IsWIMBootEnabled', DoubleType()),
     StructField('Census_IsVirtualDevice', DoubleType()),
-    StructField('Census_IsTouchEnabled', Shortype()),
+    StructField('Census_IsTouchEnabled', ShortType()),
     StructField('Census_IsPenCapable', ShortType()),
     StructField('Census_IsAlwaysOnAlwaysConnectedCapable', DoubleType()),
     StructField('Wdft_IsGamer', DoubleType()),
