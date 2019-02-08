@@ -27,14 +27,14 @@ class IoObject:
     def output_name(self):
         time_func = time_functions()
         timestamp = time_func.encode_timestamp()    
-        file_name = file_path+timestamp+self.file_suf
+        file_name = self.file_path+timestamp+self.file_suf
         return file_name
         
 class mlMOdel(IoObject):
     def __init__(self):
         self.folder_path = "hdfs:///model/"
         self.file_path = "hdfs:///model/lrm_model_"
-        self.file_suf = ""
+        self.file_suf = ".model"
         
 class CountOutput(IoObject):
     def __init__(self):

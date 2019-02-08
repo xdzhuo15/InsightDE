@@ -18,6 +18,7 @@ from schema import StreamSchema
 from batch_train import CleanData
 from pyspark.ml import Pipeline  
 from pyspark.ml.classification import LogisticRegression
+import mysql.connector
 
 def predict_risk(rdd, lfModel, pipelineModel):
     ss = SparkSession(rdd.context)

@@ -19,6 +19,7 @@ import boto3
 from time_track import *
 from io_modules import *
 from time_track import *
+import mysql.connector
 
 
 class CleanData:
