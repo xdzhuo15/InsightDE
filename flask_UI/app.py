@@ -10,11 +10,11 @@ df_test = pd.read_csv(
 df_train = pd.read_csv(
     "test_new.csv"
 )
-feature_options = pd.DataFrame(["SmartScreen","AVProductStatesIdentifier",
+feature_options = ["SmartScreen","AVProductStatesIdentifier",
                                 "CountryIdentifier", "AVProductsInstalled",
                                 "Census_OSVersion", "EngineVersion",
                                 "AppVersion", "Census_OSBuildRevision",
-                                "GeoNameIdentifier", "OsBuildLab"])
+                                "GeoNameIdentifier", "OsBuildLab"]
 
 app = dash.Dash()
 
@@ -23,7 +23,7 @@ app.layout = html.Div([
     html.Div(
         [
             dcc.Dropdown(
-                id="Features",
+                id="features",
                 options=[{
                     'label': i,
                     'value': i
@@ -38,13 +38,13 @@ app.layout = html.Div([
 
 @app.callback(
     dash.dependencies.Output('funnel-graph', 'figure'),
-    [dash.dependencies.Input('Features', 'value')])
+    [dash.dependencies.Input('features', 'value')])
 def update_graph(Feature):
-    df_plot_train = df_train.groupby(Feature).nunique()
-    df_plot_test = df_test.groupby(Feature).nunique()
+    df_plot_train = df_train.groupby(Feature).size().reset_index(name='counts')
+    df_plot_test = df_test.groupby(Feature).size().reset_index(name='counts')
 
-    data_train = {'x': df_plot_train[:,0], 'y': df_plot_train[:,1], 'type': 'bar', 'name': 'Training Data Distribution'}
-    data_test = {'x': df_plot_test[:,0], 'y': df_plot_test[:,1], 'type': 'bar', 'name': 'Preiction Data Distribution'}
+    data_train = {'x': df_plot_train.iloc[:,0], 'y': df_plot_train.iloc[:,1], 'type': 'bar', 'name': 'Training Data Distribution'}
+    data_test = {'x': df_plot_test.iloc[:,0], 'y': df_plot_test.iloc[:,1], 'type': 'bar', 'name': 'Preiction Data Distribution'}
 
     return {
         'data': [data_train, data_test],
