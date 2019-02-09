@@ -6,11 +6,11 @@ import pandas as pd
 import MySQLdb
 from io_modules import get_latestfile
 
-feature_options = ["SmartScreen","AVProductStatesIdentifier",
-                                "CountryIdentifier", "AVProductsInstalled",
-                                "Census_OSVersion", "EngineVersion",
-                                "AppVersion", "Census_OSBuildRevision",
-                                "GeoNameIdentifier", "OsBuildLab"]
+feature_options = ["HasDetection","SmartScreen","AVProductsInstalled",
+                   "CountryIdentifier", "AVProductStatesIdentifier",
+                   "Census_OSVersion", "EngineVersion",
+                   "AppVersion", "Census_OSBuildRevision",
+                   "GeoNameIdentifier", "OsBuildLab"]
 
 app = dash.Dash()
 
@@ -64,7 +64,10 @@ def update_graph(Feature):
         'data': [data_train, data_test],
         'layout':
         go.Layout(
-            title="Feature Distribution for {}".format(Feature))
+            if Feature == "HasDetections":
+                title ="Distribution of Detection for Training and Prediction Data"
+            else:
+                title="Feature Distribution for {}".format(Feature))
     }
 
 

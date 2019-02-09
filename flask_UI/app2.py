@@ -10,8 +10,8 @@ df_test = pd.read_csv(
 df_train = pd.read_csv(
     "test_new.csv"
 )
-feature_options = ["SmartScreen","AVProductStatesIdentifier",
-                                "CountryIdentifier", "AVProductsInstalled",
+feature_options = ["SmartScreen","AVProductsInstalled",
+                                "CountryIdentifier", "AVProductStatesIdentifier",
                                 "Census_OSVersion", "EngineVersion",
                                 "AppVersion", "Census_OSBuildRevision",
                                 "GeoNameIdentifier", "OsBuildLab"]
@@ -53,7 +53,7 @@ def update_graph(Feature):
         'data': [data_train, data_test],
         'layout':
         go.Layout(
-            title='Feature Distribution for {}'.format(Feature))
+            title='Distribution for Feature: {}'.format(Feature))
     }
 
 
