@@ -3,6 +3,13 @@ import dash_core_components as dcc
 import dash_html_components as html
 import plotly.graph_objs as go
 import pandas as pd
+import MySQLdb
+
+conn = MySQLdb.connect(host="ec2-34-211-3-37.us-west-2.compute.amazonaws.com",
+        user="USERNAME", passwd="PASSWORD", db="Prediction")
+cursor = conn.cursor()
+cursor.execute('select * FROM R');
+
 
 df_test = pd.read_csv(
     "test_result.csv"
