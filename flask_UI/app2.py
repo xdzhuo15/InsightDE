@@ -10,7 +10,7 @@ df_test = pd.read_csv(
 df_train = pd.read_csv(
     "test_new.csv"
 )
-feature_options = ["SmartScreen","AVProductsInstalled",
+feature_options = ["HasDetections", "SmartScreen","AVProductsInstalled",
                                 "CountryIdentifier", "AVProductStatesIdentifier",
                                 "Census_OSVersion", "EngineVersion",
                                 "AppVersion", "Census_OSBuildRevision",
@@ -53,7 +53,10 @@ def update_graph(Feature):
         'data': [data_train, data_test],
         'layout':
         go.Layout(
-            title='Distribution for Feature: {}'.format(Feature))
+            if Feature == "HasDetections":
+                title="Distribution of Detection for Training and Prediction Data"
+            else:
+                title='Distribution for Feature: {}'.format(Feature))
     }
 
 
