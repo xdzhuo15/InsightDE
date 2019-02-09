@@ -3,9 +3,13 @@ import dash_core_components as dcc
 import dash_html_components as html
 import plotly.graph_objs as go
 import pandas as pd
-import MySQLdb
-from io_modules import get_latestfile
 
+df_test = pd.read_csv(
+    "test_result.csv"
+)
+df_train = pd.read_csv(
+    "test_new.csv"
+)
 feature_options = ["SmartScreen","AVProductStatesIdentifier",
                                 "CountryIdentifier", "AVProductsInstalled",
                                 "Census_OSVersion", "EngineVersion",
@@ -36,35 +40,20 @@ app.layout = html.Div([
     dash.dependencies.Output('funnel-graph', 'figure'),
     [dash.dependencies.Input('features', 'value')])
 def update_graph(Feature):
+    df_plot_train = df_train.groupby(Feature).size().reset_index(name='counts')
+    df_plot_test = df_test.groupby(Feature).size().reset_index(name='counts')
 
-    def table_query(Feature,isTrain=True):
-        if isTrain == True:
-            dbName = "Training"
-        else:
-            dbName = "Prediction"
+    n_train = len(df_train)
+    n_test = len(df_test)
 
-        conn = MySQLdb.connect(host="ec2-34-211-3-37.us-west-2.compute.amazonaws.com",
-                               user="USERNAME", passwd="PASSWORD", db=dbName)
-        cursor = conn.cursor()
-        get_table = get_latestfile("")
-        cursor.execute("select COUNT({}) FROM {} GROUPBY {}".format(Feature, get_table, Feature));
-        plot_data = dict(cursor.fetchall())
-        cursor.execute("select COUNT({}) FROM {}".format(Feature, get_table));
-        count_data = dict(cursor.fetchall())
-        n_data = count_data(Feature)
-        return plot_data, n_data
-
-    df_plot_train, n_train = table_query(Feature,True)
-    df_plot_test, n_test = table_query(Feature,False)
-
-    data_train = {'x': df_plot_train.iloc[:,0], 'y': df_plot_train.iloc[:,1]/n_train, 'type': 'bar', 'name': 'Training Data Distribution'}
-    data_test = {'x': df_plot_test.iloc[:,0], 'y': df_plot_test.iloc[:,1]/n_test, 'type': 'bar', 'name': 'Preiction Data Distribution'}
+    data_train = {'x': df_plot_train.iloc[:,0], 'y': df_plot_train.iloc[:,1]/n_train, 'type': 'bar', 'name': 'Training Data'}
+    data_test = {'x': df_plot_test.iloc[:,0], 'y': df_plot_test.iloc[:,1]/n_test, 'type': 'bar', 'name': 'Preiction Data'}
 
     return {
         'data': [data_train, data_test],
         'layout':
         go.Layout(
-            title="Feature Distribution for {}".format(Feature))
+            title='Feature Distribution for {}'.format(Feature))
     }
 
 

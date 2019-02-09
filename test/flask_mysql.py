@@ -9,7 +9,7 @@ import MySQLdb
 conn = MySQLdb.connect(host="ec2-34-211-3-37.us-west-2.compute.amazonaws.com",
         user="USERNAME", passwd="PASSWORD", db="Prediction")
 cursor = conn.cursor()
-cursor.execute('select * FROM R');
+cursor.execute("select * FROM R");
 
 rows = cursor.fetchall()
 print(rows)
