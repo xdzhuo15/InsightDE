@@ -10,11 +10,11 @@ df_test = pd.read_csv(
 df_train = pd.read_csv(
     "test_result.csv"
 )
-feature_options = ["HasDetections", "SmartScreen","AVProductsInstalled",
-                                "CountryIdentifier", "AVProductStatesIdentifier",
-                                "Census_OSVersion", "EngineVersion",
-                                "AppVersion", "Census_OSBuildRevision",
-                                "GeoNameIdentifier", "OsBuildLab"]
+feature_options = ["SmartScreen","AVProductsInstalled",
+                   "CountryIdentifier", "AVProductStatesIdentifier",
+                   "Census_OSVersion", "EngineVersion",
+                   "AppVersion", "Census_OSBuildRevision",
+                   "GeoNameIdentifier", "OsBuildLab"]
 
 app = dash.Dash()
 
