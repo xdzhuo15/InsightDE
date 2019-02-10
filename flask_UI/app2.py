@@ -5,10 +5,10 @@ import plotly.graph_objs as go
 import pandas as pd
 
 df_test = pd.read_csv(
-    "test_result.csv"
+    "test_new.csv"
 )
 df_train = pd.read_csv(
-    "test_new.csv"
+    "test_result.csv"
 )
 feature_options = ["HasDetections", "SmartScreen","AVProductsInstalled",
                                 "CountryIdentifier", "AVProductStatesIdentifier",
@@ -53,10 +53,7 @@ def update_graph(Feature):
         'data': [data_train, data_test],
         'layout':
         go.Layout(
-            if Feature == "HasDetections":
-                title="Distribution of Detection for Training and Prediction Data"
-            else:
-                title='Distribution for Feature: {}'.format(Feature))
+            title='Distribution for Feature: {}'.format(Feature))
     }
 
 
