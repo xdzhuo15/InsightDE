@@ -1,3 +1,3 @@
-flask_UI/app2.py
-flask_UI/test_new.csv
-flask_UI/test_result.csv
+app2.py
+test_new.csv
+test_result.csv
