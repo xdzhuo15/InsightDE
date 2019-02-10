@@ -58,7 +58,7 @@ class PiplModel(IoObject):
         self.file_suf = ""
         
 
-def toMysql(df,isTrain = True, timestamp):
+def toMysql(df, timestamp, isTrain ="True"):
     if isTrain == True:
         db_name = "Training"
     else:

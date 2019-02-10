@@ -37,7 +37,7 @@ app.layout = html.Div([
     [dash.dependencies.Input('features', 'value')])
 def update_graph(Feature):
 
-    def table_query(Feature,isTrain=True):
+    def table_query(Feature,isTrain="True"):
         if isTrain == True:
             dbName = "Training"
         else:
