@@ -15,20 +15,17 @@ def user_data(data, N):
     n_data = len(data)
     for i in range(N):
         #M = random.randint(0,n_data)
-        M = 100
+        M = 10000
         for j in range(M):
             index = random.randint(0, n_data-1)
             row = data.loc[index]
             producer.send('DeviceRecord', row.to_json())
         producer.flush()
         time.sleep(1)
-    
-if __name__ == "__main__":  
-    file_name = "test_2000.csv"
-    producer = KafkaProducer(bootstrap_servers = "localhost:9092")         
-    data = pd.read_csv(file_name, index_col=0 )   
-    N = 10
-    user_data(data, N)
-    
-    
 
+if __name__ == "__main__":
+    file_name = "test.csv"
+    producer = KafkaProducer(bootstrap_servers = "localhost:9092")
+    data = pd.read_csv(file_name, index_col=0, low_memory=False )   
+    N = 10000
+    user_data(data, N)

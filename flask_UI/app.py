@@ -6,7 +6,7 @@ import pandas as pd
 import MySQLdb
 from io_modules import get_latestfile
 
-feature_options = ["HasDetection","SmartScreen","AVProductsInstalled",
+feature_options = ["HasDetections","SmartScreen","AVProductsInstalled",
                    "CountryIdentifier", "AVProductStatesIdentifier",
                    "Census_OSVersion", "EngineVersion",
                    "AppVersion", "Census_OSBuildRevision",
@@ -65,7 +65,7 @@ def update_graph(Feature):
         'layout':
         go.Layout(
             if Feature == "HasDetections":
-                title ="Distribution of Detection for Training and Prediction Data"
+                title ="Distribution of Detections for Training and Prediction Data"
             else:
                 title="Feature Distribution for {}".format(Feature))
     }

@@ -29,9 +29,9 @@ def predict_risk(rdd, lfModel, pipelineModel):
     exclude_key_list = ["MachineIdentifier", "CSVId"]
     
     features = CleanData(df, exclude_key_list, False)
-    clean_features = features.final()
-    transformed_features = pipelineModel.transform(clean_features)
-    selected_cols = [ "features_vec"] + features.finalized_cols()
+    
+    transformed_features = pipelineModel.transform(features)
+    selected_cols = [ "features_vec"] + features.finalized_cols_2()
     data = transformed_features.select(selected_cols)
     prediction = lrModel.transform(data)
     

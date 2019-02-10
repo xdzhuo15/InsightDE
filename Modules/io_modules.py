@@ -57,28 +57,15 @@ class PiplModel(IoObject):
         self.file_path = "hdfs:///pipeline/pipeline_model_"
         self.file_suf = ""
         
-def toMysql():
-    def __init__(self,data_frame, file_name):
-        self.data = data_frame
-        self.table = file_name
-        self.sql_url = "jdbc:mysql://localhost/database_name"
-        self.sql_driver = "com.mysql.jdbc.Driver"
-        self.usr = "your_user_name"
-        self.pss = "your_password"
-        
-    def save_tosql(self):
-        self.data.write.format("jdbc").options(
-          url=self.sql_url,
-          driver=self.sql_driver,
-          dbtable=self.table,
-          user=self.usr,
-          password=self.pss).mode("append").save()
-    
-    def load_frsql(self): 
-        # not need for spark, only query to flask
-        source_df = sqlContext.read.format("jdbc").options(
-        url=self.sql_url,
-        driver=self.sql_driver,
-        dbtable=self.table,
-        user=self.usr,
-        password=self.pss).load()
+
+def toMysql(df,isTrain = True, timestamp):
+    if isTrain == True:
+        db_name = "Training"
+    else:
+        db_name = "Prediction"
+    df.write.format('jdbc').options(
+            url="jdbc:mysql://ec2-34-211-3-37.us-west-2.compute.amazonaws.com:3306/{}".format(db_name),
+            driver='com.mysql.cj.jdbc.Driver',
+            dbtable="Data_"+timestamp,
+            user="USERNAME",
+            password="PASSWORD").mode('write').save()

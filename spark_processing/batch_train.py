@@ -18,7 +18,7 @@ from pyspark.ml.evaluation import BinaryClassificationEvaluator
 import boto3
 from time_track import *
 from io_modules import *
-from time_track import *
+from custom_transformer import FreqEncoder
 import mysql.connector
 
 
@@ -83,26 +83,49 @@ class CleanData:
                 mapped_col=one_col.na.replace(para_json[key], 1)
                 self.mapped_s.withColumn(key+"_mapped",mapped_col)
         return self.mapped_str
-       
-    def build_pipeline(self):
+     
+    # Without customized module     
+    def build_pipeline_1(self):
         if self.isTrain == True:
-            self.final = self.mapped_trn
+            self.final_1 = self.mapped_trn
         else:
-            self.final = self.mapped_str
+            self.final_1 = self.mapped_str
         stages = []
         for n_col in self.numerical_cols:
-            impute = Imputer(inputCol = n_col, outputCol = n_col + "_cleaned")
-            stages += [impute]
-            selected_cols = [ c + "_mapped" for c in self.categorical_cols ]+[ c + "_cleaned" for c in self.numerical_cols ]
+            imputer = Imputer(inputCol = n_col, outputCol = n_col + "_cleaned")
+            stages += [imputer]
+        selected_cols = [ c + "_mapped" for c in self.categorical_cols ]+[ c + "_cleaned" for c in self.numerical_cols ]
         for col in selected_cols:
             norm_feature = MinMaxScaler(inputCol = col, outputCol=col + "_norm")
             stages +=[norm_feature]
-        self.finalized_cols = [ c + "_norm" for c in selected_cols ]
-        self.selected_features = self.final.select(self.finalized_cols)
-        assembler = VectorAssembler(inputCols=self.selected_features, outputCol="features_vec")
+        self.finalized_cols_1 = [ c + "_norm" for c in selected_cols ]
+        self.selected_features_1 = self.final.select(self.finalized_cols_1)
+        assembler = VectorAssembler(inputCols=self.selected_features_1, outputCol="features_vec")
         stages +=[assembler]
-        self.pipeline = Pipeline(stages = stages)
-        return self.pipeline
+        self.pipeline_1 = Pipeline(stages = stages)
+        return self.pipeline_1
+    
+    # With customized module
+    def build_pipeline_2(self):
+        self.final_2 = self.remove_label
+        stages = []
+        for n_col in self.numerical_cols:
+            imputer = Imputer(inputCol = n_col, outputCol = n_col + "_cleaned")
+            stages += [imputer]
+        for n_col in self.categorical_cols:
+            encoder = FreqEncoder(inputCol = n_col, outputCol = n_col + "_cleaned")
+            stages += [encoder]
+        selected_cols = [ c + "_cleaned" for c in self.categorical_cols ]+[ c + "_cleaned" for c in self.numerical_cols ]
+        for col in selected_cols:
+            norm_feature = MinMaxScaler(inputCol = col, outputCol=col + "_norm")
+            stages += [norm_feature]
+        self.finalized_cols_2 = [ c + "_norm" for c in selected_cols ]
+        self.selected_features_2 = self.final.select(self.finalized_cols_2)
+        assembler = VectorAssembler(inputCols=self.selected_features, outputCol="features_vec")
+        stages += [assembler]
+        self.pipeline_2 = Pipeline(stages = stages)
+        return self.pipeline_2
+        
 
 def main():
     time_func = time_functions()
@@ -124,24 +147,19 @@ def main():
     exclude_key_list = ["MachineIdentifier", "CSVId", "HasDetections"]
     labels = df.select("HasDetections")
     features = CleanData(df, exclude_key_list, True)
-    clean_features = features.final()
     
-    clean_features.persist()
-    
-    timedelta, timeend = time_func.run_time(timestart) 
-    print "Time taken to clean data: " + str(timedelta) + " seconds"
-    
-    clean_pipeline = features.pipeline()
+    clean_pipeline = features.pipeline_2
     pipelineModel = clean_pipeline.fit(clean_features)
     transformed_features = pipelineModel.transform(clean_features)
     
     output = PiplModel()
     pipelineModel.write.save(output.output_name())
     
+    time_func = time_functions()
     timedelta, timeend = time_func.run_time(timeend) 
     print "Time taken to build pipeline: " + str(timedelta) + " seconds"
         
-    selected_cols = [ "features_vec"] + features.finalized_cols()
+    selected_cols = [ "features_vec"] + features.finalized_cols_2()
     training_data =  transformed_features.select(selected_cols)
     training_data.withColumn(labels)
     train, test = training_data.randomSplit([0.7, 0.3], seed = 1000) 
@@ -150,7 +168,8 @@ def main():
         
     lr = LogisticRegression(featuresCol = "features_vec", labelCol = "HasDetections", 
                             maxIter=10, regParam=0.3, elasticNetParam=0.8 )
-    lrModel = lr.fit(train)    
+    lrModel = lr.fit(train) 
+    time_func = time_functions()
     timedelta, timeend = time_func.run_time(timeend) 
     print "Time taken to train the model: " + str(timedelta) + " seconds"
     
@@ -166,7 +185,10 @@ def main():
     # save df in sql (add original data)
     productID = training_data.select("MachineIdentifier")
     output_features.withColumn("MachineIdentifier", productID)
-    # connect to flask for 4 charts of top features
+    
+    time_func = time_functions()
+    timestamp = time_func.encode_timestamp()
+    toMysql(output_features, True, timestamp)
     
 if __name__ == "__main__": 
     main()

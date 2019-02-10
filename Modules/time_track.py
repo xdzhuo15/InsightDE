@@ -10,7 +10,7 @@ import datetime
 class time_functions:
     def __init__(self):
         self.now = datetime.datetime.now()
-        self.prev = times_tart
+        self.prev = times_start
         
     def encode_timestamp(self):
         return unicode(self.now).replace(" ","").replace(":","")
