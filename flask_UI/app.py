@@ -64,10 +64,7 @@ def update_graph(Feature):
         'data': [data_train, data_test],
         'layout':
         go.Layout(
-            if Feature == "HasDetections":
-                title ="Distribution of Detections for Training and Prediction Data"
-            else:
-                title="Feature Distribution for {}".format(Feature))
+            title="Feature Distribution for {}".format(Feature))
     }
 
 
