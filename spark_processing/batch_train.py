@@ -40,9 +40,9 @@ class CleanData:
         numerical_cols = []
         for types in train_data.dtypes:
             if types[1] == "StringType":
-                categorical_cols.append(col)
+                categorical_cols.append(types[0])
             else:
-                numerical_cols.append(col)
+                numerical_cols.append(types[0])
         return categorical_cols, numerical_cols
 
     def fill_nullstring(self):
