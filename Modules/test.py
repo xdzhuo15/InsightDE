@@ -1,5 +1,6 @@
 from freqencoder import FreqEncoder, FreqEncoderModel
 from pyspark.sql import SQLContext, SparkSession
+from pyspark.ml.feature import Imputer, VectorAssembler, MinMaxScaler, StringIndexer
 
 spark = SparkSession.builder.appName("ReadData").getOrCreate()
 
@@ -14,6 +15,11 @@ data = [
 ]
 
 df = spark.createDataFrame(data, ["input", "expected"])
+
+indexer = StringIndexer().setInputCol("input").setOutputCol("new_index")
+data = indexer.fit(df)
+
+data.transform(df).show()
 
 freqencoder = FreqEncoder() \
     .setInputCol("input") \
