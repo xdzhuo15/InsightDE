@@ -21,7 +21,7 @@ class FreqEncoder(JavaEstimator, HasInputCol, HasOutputCol, JavaMLReadable, Java
     def __init__(self, inputCol=None, outputCol=None):
         super(FreqEncoder, self).__init__()
         self._java_obj = self._new_java_obj(
-            self._classpath ,
+            FreqEncoder._classpath ,
             self.uid
         )
         # self._setDefault(numberBins=10)

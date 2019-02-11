@@ -90,7 +90,7 @@ class CleanData:
         final = self.map_category_pred()
         categorical_cols, numerical_cols = self.count_cols()
         stages = []
-        selected_cols = [ c + "_mapped" for c in categorical_cols ]+[ c + for c in numerical_cols ]
+        selected_cols = [ c + "_mapped" for c in categorical_cols ]+[ c for c in numerical_cols ]
         for col in selected_cols:
             norm_feature = MinMaxScaler(inputCol = col, outputCol=col + "_norm")
             stages +=[norm_feature]
