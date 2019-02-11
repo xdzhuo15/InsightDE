@@ -19,7 +19,7 @@ from batch_train import CleanData
 from pyspark.ml import Pipeline
 from pyspark.ml.classification import LogisticRegression
 import mysql.connector
-from pyspark.ml.feature import Imputer, VectorAssembler, MinMaxScaler, StringIndexer
+from pyspark.ml.feature import VectorAssembler, MinMaxScaler, StringIndexer
 import datetime
 
 def predict_risk(rdd, lfModel, pipelineModel):

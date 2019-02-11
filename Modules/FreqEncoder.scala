@@ -34,8 +34,8 @@ trait FreqEncoderParams extends Params {
 
    /** Validates and transforms the input schema. */
    protected def validateAndTransformSchema(schema: StructType): StructType = {
-     require(isDefined(inputCol), s"FreqEncoder requires input column parameter: $inputCol")
-     require(isDefined(outputCol), s"FreqEncoder requires output column parameter: $outputCol")
+      require(isDefined(inputCol), s"FreqEncoder requires input column parameter: $inputCol")
+      require(isDefined(outputCol), s"FreqEncoder requires output column parameter: $outputCol")
 
     val field = schema.fields(schema.fieldIndex($(inputCol)))
 
@@ -94,6 +94,20 @@ class FreqEncoder(override val uid: String)
       .collect()(0)
    }
 
+   def getIndexer(labels: Seq[String], bins: OpenHashMap[String, Long]) = {
+      udf {label: String =>
+         if (label == null) {
+           labels.length
+         } else {
+           if (bins.contains(label)) {
+             bins(label)
+           } else {
+             labels.length
+           }
+         }
+      }
+   }
+
    override def fit(dataset: Dataset[_]): FreqEncoderModel = {
      transformSchema(dataset.schema, logging = true)
 
@@ -118,9 +132,9 @@ class FreqEncoderModel(override val uid: String, val bins: OpenHashMap[String, L
    }
 
    /** Returns the corresponding bin on which the input falls */
-   /** val getBin = (a: Double, bins: SortedMap[Double, Int]) => bins.to(a).last._2 */
+   /** val getBin = (a: String, bins: SortedMap[String, Int]) => bins.to(a).last._2 */
 
-   val getBin = (a: String, bins: OpenHashMap[String, Long]) => bins.to(a).map(_._1).toArray
+   val indexer = getIndexer(dataset(inputCol).cast(StringType), bins)
 
    override def copy(extra: ParamMap): FreqEncoderModel = {
      defaultCopy(extra)
@@ -141,7 +155,7 @@ class FreqEncoderModel(override val uid: String, val bins: OpenHashMap[String, L
 
      val binsBr = broadcastBins.get
 
-     val vectorizer = udf { (input: String) => getBin(input, binsBr.value)}
+     val vectorizer = udf { (input: String) => indexer(dataset(inputCo).cast(StringType))}
 
      dataset.withColumn($(outputCol), vectorizer(col($(inputCol))))
    }

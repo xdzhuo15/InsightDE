@@ -1,4 +1,4 @@
-import Utils
+import Utils from Utils
 import org.apache.hadoop.fs.Path
 import org.apache.spark.SparkContext
 import org.apache.spark.ml.param.{ParamPair, Params}

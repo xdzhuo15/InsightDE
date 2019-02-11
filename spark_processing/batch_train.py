@@ -11,7 +11,7 @@ import json
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SQLContext, SparkSession, Row, Column
 from pyspark.sql.types import *
-from pyspark.ml.feature import Imputer, VectorAssembler, MinMaxScaler, StringIndexer
+from pyspark.ml.feature import VectorAssembler, MinMaxScaler, StringIndexer
 from pyspark.ml.classification import LogisticRegression
 from pyspark.ml import Pipeline
 from pyspark.ml.evaluation import BinaryClassificationEvaluator
@@ -90,10 +90,7 @@ class CleanData:
         final = self.map_category_pred()
         categorical_cols, numerical_cols = self.count_cols()
         stages = []
-        for col in numerical_cols:
-            imputer = Imputer(inputCol = col, outputCol = col + "_cleaned")
-            stages += [imputer]
-        selected_cols = [ c + "_mapped" for c in categorical_cols ]+[ c + "_cleaned" for c in numerical_cols ]
+        selected_cols = [ c + "_mapped" for c in categorical_cols ]+[ c + for c in numerical_cols ]
         for col in selected_cols:
             norm_feature = MinMaxScaler(inputCol = col, outputCol=col + "_norm")
             stages +=[norm_feature]
@@ -109,15 +106,11 @@ class CleanData:
         train_data = self.exclude_cols()
         categorical_cols, numerical_cols = self.count_cols()
         stages = []
-        input_numerical =  [ col for col in numerical_cols]
-        output_numerical = [ col + "_cleaned" for col in numerical_cols ]
-        imputer = Imputer(inputCol = input_numerical, outputCol = output_numerical)
-        stages += [imputer]
         input_numerical =  [ col for col in categorical_cols ]
         output_numerical = [ col + "_cleaned" for col in categorical_cols ]
         encoder = StringIndexer(inputCol = col, outputCol = col + "_cleaned")
         stages += [encoder]
-        selected_cols = [ c + "_cleaned" for c in categorical_cols ]+[ c + "_cleaned" for c in numerical_cols ]
+        selected_cols = [ c + "_cleaned" for c in categorical_cols ]+[ c for c in numerical_cols ]
         for col in selected_cols:
             norm_feature = MinMaxScaler(inputCol = col, outputCol=col + "_norm")
             stages += [norm_feature]

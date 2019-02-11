@@ -22,7 +22,7 @@ class FreqEncoder(JavaEstimator, HasInputCol, HasOutputCol, JavaMLReadable, Java
         super(FreqEncoder, self).__init__()
         self._java_obj = self._new_java_obj(
             FreqEncoder._classpath ,
-            self.uid
+            self.uid = "pipeline"
         )
         # self._setDefault(numberBins=10)
         kwargs = self._input_kwargs
