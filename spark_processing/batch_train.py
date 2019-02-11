@@ -27,7 +27,6 @@ class CleanData:
         self.features = data
         self.exclude = exclude_key_list
         # True or False
-        self.isTrain = is_train
 
     def exclude_cols(self):
         df = self.features
