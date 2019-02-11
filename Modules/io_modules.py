@@ -8,7 +8,7 @@ Created on Tue Feb  5 12:26:18 2019
 import os
 import glob
 import json
-from time_track import time_functions
+from time_track import *
 #from pyspark.sql import SQLContext
 
 def get_latestfile(folder_path):
@@ -25,8 +25,7 @@ class IoObject:
         self.data_file = self.folder_path+get_latestfile(self.folder_path)
 
     def output_name(self):
-        time_func = time_functions()
-        timestamp = time_func.encode_timestamp()
+        timestamp = encode_timestamp()
         file_name = self.file_path+timestamp+self.file_suf
         return file_name
 
@@ -59,6 +58,7 @@ class PiplModel(IoObject):
 
 
 def toMysql(df, timestamp, isTrain ="True"):
+    timestamp = encode_timestamp()
     if isTrain == True:
         db_name = "Training"
         mood = "write"
