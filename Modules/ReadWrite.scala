@@ -1,6 +1,4 @@
-package com.spark.persistence
-
-import com.spark.utils.Utils
+import Utils
 import org.apache.hadoop.fs.Path
 import org.apache.spark.SparkContext
 import org.apache.spark.ml.param.{ParamPair, Params}

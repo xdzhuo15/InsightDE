@@ -11,7 +11,7 @@ class FreqEncoder(JavaEstimator, HasInputCol, HasOutputCol, JavaMLReadable, Java
     Divides the range of a continuous column by an input parameter `numberBins` and then, for each row, decides the appropriate bin.
     """
 
-    _classpath = 'com.spark.feature.FreqEncoder'
+    _classpath = 'FreqEncoder'
 
     # numberBins = Param(
     #     Params._dummy(), "numberBins", "Number of fixed bins to divide the range",
@@ -57,7 +57,7 @@ class FreqEncoderModel(JavaModel, JavaMLReadable, JavaMLWritable):
     Model fitted by :py:class:`FreqEncoder`.
     """
 
-    _classpath_model = 'com.spark.feature.FreqEncoderModel'
+    _classpath_model = 'FreqEncoderModel'
 
     # @property
     # def bins(self):
