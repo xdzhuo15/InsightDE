@@ -1,7 +1,4 @@
-from freqencoder import FreqEncoder, FreqEncoderModel
-from pyspark.sql import SQLContext, SparkSession
-
-spark = SparkSession.builder.appName("ReadData").getOrCreate()
+from feature.freqencoder import FreqEncoder, FreqEncoderModel
 
 data = [
     ("Tax", 3),

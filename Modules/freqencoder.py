@@ -3,7 +3,7 @@ from pyspark.ml.param.shared import *
 from pyspark.ml.util import JavaMLReadable, JavaMLWritable
 from pyspark.ml.wrapper import JavaEstimator, JavaModel, JavaTransformer, _jvm, JavaParams
 
-from custom_spark_ml.utils.java_reader import CustomJavaMLReader
+from java_reader import CustomJavaMLReader
 
 
 class FreqEncoder(JavaEstimator, HasInputCol, HasOutputCol, JavaMLReadable, JavaMLWritable):
