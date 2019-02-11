@@ -30,19 +30,17 @@ def predict_risk(rdd, lfModel, pipelineModel):
 
     exclude_key_list = ["MachineIdentifier", "CSVId"]
 
-    features = CleanData(df, exclude_key_list, False)
+    features = CleanData(df, exclude_key_list)
 
     transformed_features = pipelineModel.transform(features)
-    selected_cols = [ "features_vec"] + features.finalized_cols_sp()
-    data = transformed_features.select(selected_cols)
-    prediction = lrModel.transform(data)
+    prediction = lrModel.transform(transformed_features)
 
     # add original data!
     productID = df.select("MachineIdentifier")
     data.withColumn(["MachineIdentifier", "HasDetections"], [productID, prediction])
 
     timestamp = encode_timestamp()
-    toMysql(output_features, False, timestamp)
+    toMysql(output_features, timestamp, False)
 
 def main():
     conf = SparkConf().setAppName("prediction").setMaster(
