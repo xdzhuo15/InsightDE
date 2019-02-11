@@ -16,29 +16,33 @@ from io_modules import *
 import json
 from schema import StreamSchema
 from batch_train import CleanData
-from pyspark.ml import Pipeline  
+from pyspark.ml import Pipeline
 from pyspark.ml.classification import LogisticRegression
 import mysql.connector
+from pyspark.ml.feature import Imputer, VectorAssembler, MinMaxScaler, StringIndexer
 
 def predict_risk(rdd, lfModel, pipelineModel):
     ss = SparkSession(rdd.context)
     if rdd.isEmpty():
         return
     df = ss.createDataFrame(rdd, schema = StreamSchema)
-    
+
     exclude_key_list = ["MachineIdentifier", "CSVId"]
-    
+
     features = CleanData(df, exclude_key_list, False)
-    
+
     transformed_features = pipelineModel.transform(features)
-    selected_cols = [ "features_vec"] + features.finalized_cols_2()
+    selected_cols = [ "features_vec"] + features.finalized_cols_sp()
     data = transformed_features.select(selected_cols)
     prediction = lrModel.transform(data)
-    
+
     # add original data!
     productID = df.select("MachineIdentifier")
-    data.withColumn("MachineIdentifier", productID).withColumn("Detection",prediction)
-    # save to mysql
+    data.withColumn(["MachineIdentifier", "HasDetections"], [productID, prediction])
+
+    time_func = time_functions()
+    timestamp = time_func.encode_timestamp()
+    toMysql(output_features, False, timestamp)
 
 def main():
     conf = SparkConf().setAppName("prediction").setMaster(
@@ -46,21 +50,21 @@ def main():
             )
     sc = SparkContext(conf=conf)
     sc.setLogLevel("WARN")
-    ssc = StreamingContext(sc, 5)
-    
+    ssc = StreamingContext(sc, 1)
+
     #load saved pipeline, model, and parameters
     lrModel = mlMOdel()
     savedModel = LogisticRegressionModel.load(sc, model.data_file())
     pipe = PiplModel()
     pipelineModel = Pipeline.read.load(pipe.data_file())
- 
-    kafka_stream = KafkaUtils.createDirectStream(ssc, ["DeviceRecord"], 
-            {"metadata.broker.list":"ip-10-0-0-7:9092,ip-10-0-0-11:9092,ip-10-0-0-10:9092"})    
+
+    kafka_stream = KafkaUtils.createDirectStream(ssc, ["DeviceRecord"],
+            {"metadata.broker.list":"ip-10-0-0-7:9092,ip-10-0-0-11:9092,ip-10-0-0-10:9092"})
     kafka_stream.map(lambda (key, value): json.loads(value))
     kafka_stream = get_kafkastream()
     kafka_stream.foreachRDD(lambda x: predict_risk(x))
     ssc.start()
     ssc.awaitTermination()
-    
+
 if __init__ == "__main__":
-    main()    
+    main()
