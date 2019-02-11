@@ -18,7 +18,6 @@ from pyspark.ml.evaluation import BinaryClassificationEvaluator
 import boto3
 from time_track import *
 from io_modules import *
-from custom_transformer import FreqEncoder
 import mysql.connector
 
 
@@ -105,16 +104,16 @@ class CleanData:
         self.pipeline = Pipeline(stages = stages)
         return self.pipeline
 
-    # With customized module to simplify
+    # With feature library to simplify
     def build_pipeline_sp(self):
         train_data = self.remove_label
         stages = []
-        input_numerical =  self.numerical_cols:
-        output_numerical = [ col + "_cleaned" for col in self.numerical_cols }
+        input_numerical =  [ col for col in self.numerical_cols]
+        output_numerical = [ col + "_cleaned" for col in self.numerical_cols ]
         imputer = Imputer(inputCol = input_numerical, outputCol = output_numerical)
         stages += [imputer]
-        input_numerical =  self.categorical_cols:
-        output_numerical = [ col + "_cleaned" for col in self.categorical_cols }
+        input_numerical =  [ col for col in categorical_cols ]
+        output_numerical = [ col + "_cleaned" for col in self.categorical_cols ]
         encoder = StringIndexer(inputCol = col, outputCol = col + "_cleaned")
         stages += [encoder]
         selected_cols = [ c + "_cleaned" for c in self.categorical_cols ]+[ c + "_cleaned" for c in self.numerical_cols ]
@@ -130,8 +129,8 @@ class CleanData:
 
 
 def main():
-    time_func = time_functions()
-    timestart = time_func.now()
+    #time_func = time_functions()
+    #timestart = time_func.now()
 
     file_name = "train_5000.csv"
     s3 = boto3.resource("s3")
@@ -157,9 +156,9 @@ def main():
     output = PiplModel()
     pipelineModel.write.save(output.output_name())
 
-    time_func = time_functions()
-    timedelta, timeend = time_func.run_time(timeend)
-    print "Time taken to build pipeline: " + str(timedelta) + " seconds"
+    #time_func = time_functions()
+    #timedelta, timeend = time_func.run_time(timeend)
+    #print "Time taken to build pipeline: " + str(timedelta) + " seconds"
 
     selected_cols = [ "features_vec"] + features.finalized_cols()
     training_data =  transformed_features.select(selected_cols)
@@ -171,9 +170,9 @@ def main():
     lr = LogisticRegression(featuresCol = "features_vec", labelCol = "HasDetections",
                             maxIter=10, regParam=0.3, elasticNetParam=0.8 )
     lrModel = lr.fit(train)
-    time_func = time_functions()
-    timedelta, timeend = time_func.run_time(timeend)
-    print "Time taken to train the model: " + str(timedelta) + " seconds"
+    #time_func = time_functions()
+    #timedelta, timeend = time_func.run_time(timeend)
+    #print "Time taken to train the model: " + str(timedelta) + " seconds"
 
     #trainingSummary = lrModel.summary
     validation = lrModel.transform(test)
@@ -188,8 +187,9 @@ def main():
     productID = training_data.select("MachineIdentifier")
     output_features.withColumn("MachineIdentifier", productID)
 
-    time_func = time_functions()
-    timestamp = time_func.encode_timestamp()
+    #time_func = time_functions()
+    #timestamp = time_func.encode_timestamp()
+    timestamp = "102034"
     toMysql(output_features, True, timestamp)
 
 if __name__ == "__main__":
