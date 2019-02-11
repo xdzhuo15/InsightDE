@@ -20,6 +20,7 @@ from pyspark.ml import Pipeline
 from pyspark.ml.classification import LogisticRegression
 import mysql.connector
 from pyspark.ml.feature import Imputer, VectorAssembler, MinMaxScaler, StringIndexer
+import datetime
 
 def predict_risk(rdd, lfModel, pipelineModel):
     ss = SparkSession(rdd.context)
@@ -40,8 +41,7 @@ def predict_risk(rdd, lfModel, pipelineModel):
     productID = df.select("MachineIdentifier")
     data.withColumn(["MachineIdentifier", "HasDetections"], [productID, prediction])
 
-    time_func = time_functions()
-    timestamp = time_func.encode_timestamp()
+    timestamp = encode_timestamp()
     toMysql(output_features, False, timestamp)
 
 def main():

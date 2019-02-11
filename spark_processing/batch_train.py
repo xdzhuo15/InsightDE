@@ -19,6 +19,7 @@ import boto3
 from time_track import *
 from io_modules import *
 import mysql.connector
+import datetime
 
 
 class CleanData:
@@ -129,8 +130,8 @@ class CleanData:
 
 
 def main():
-    #time_func = time_functions()
-    #timestart = time_func.now()
+
+    timestart = datetime.datetime.now()
 
     file_name = "train_5000.csv"
     s3 = boto3.resource("s3")
@@ -149,16 +150,15 @@ def main():
     labels = df.select("HasDetections")
     features = CleanData(df, exclude_key_list, True)
 
-    clean_pipeline = features.pipeline_sp
+    clean_pipeline = features.build_pipeline_sp()
     pipelineModel = clean_pipeline.fit(clean_features)
     transformed_features = pipelineModel.transform(clean_features)
 
     output = PiplModel()
     pipelineModel.write.save(output.output_name())
 
-    #time_func = time_functions()
-    #timedelta, timeend = time_func.run_time(timeend)
-    #print "Time taken to build pipeline: " + str(timedelta) + " seconds"
+    timedelta, timeend = run_time(timestart)
+    print "Time taken to build pipeline: " + str(timedelta) + " seconds"
 
     selected_cols = [ "features_vec"] + features.finalized_cols()
     training_data =  transformed_features.select(selected_cols)
@@ -170,11 +170,10 @@ def main():
     lr = LogisticRegression(featuresCol = "features_vec", labelCol = "HasDetections",
                             maxIter=10, regParam=0.3, elasticNetParam=0.8 )
     lrModel = lr.fit(train)
-    #time_func = time_functions()
-    #timedelta, timeend = time_func.run_time(timeend)
-    #print "Time taken to train the model: " + str(timedelta) + " seconds"
 
-    #trainingSummary = lrModel.summary
+    timedelta, timeend = time_func.run_time(timeend)
+    print "Time taken to train the model: " + str(timedelta) + " seconds"
+
     validation = lrModel.transform(test)
     evaluator = BinaryClassificationEvaluator()
     print('Test Area Under ROC', evaluator.evaluate(validation))
@@ -187,9 +186,7 @@ def main():
     productID = training_data.select("MachineIdentifier")
     output_features.withColumn("MachineIdentifier", productID)
 
-    #time_func = time_functions()
-    #timestamp = time_func.encode_timestamp()
-    timestamp = "102034"
+    timestamp = time_func.encode_timestamp()
     toMysql(output_features, True, timestamp)
 
 if __name__ == "__main__":
