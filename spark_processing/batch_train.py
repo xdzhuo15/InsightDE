@@ -106,10 +106,9 @@ class CleanData:
         train_data = self.exclude_cols()
         categorical_cols, numerical_cols = self.count_cols()
         stages = []
-        input_categorical =  [ col for col in categorical_cols ]
-        output_categorical = [ col + "_cleaned" for col in categorical_cols ]
-        encoder = StringIndexer(inputCol = input_categorical, outputCol = output_categorical)
-        stages += [encoder]
+        for col in categorical_cols:
+            encoder = StringIndexer(inputCol = col, outputCol = col+"_cleaned")
+            stages += [encoder]
         selected_cols = [ c + "_cleaned" for c in categorical_cols ]+[ c for c in numerical_cols ]
         for col in selected_cols:
             norm_feature = MinMaxScaler(inputCol = col, outputCol=col + "_norm")
