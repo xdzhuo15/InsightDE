@@ -14,7 +14,6 @@ from pyspark.sql.types import *
 from time_track import *
 from io_modules import *
 import json
-from schema import StreamSchema
 from batch_train import CleanData
 from pyspark.ml import Pipeline
 from pyspark.ml.classification import LogisticRegression
@@ -26,18 +25,24 @@ def predict_risk(rdd, lfModel, pipelineModel):
     ss = SparkSession(rdd.context)
     if rdd.isEmpty():
         return
-    df = ss.createDataFrame(rdd, schema = StreamSchema)
+    df = ss.createDataFrame(rdd)
 
-    exclude_key_list = ["MachineIdentifier", "CSVId"]
+    # top features
+    initial_cols = ["SmartScreen","AVProductStatesIdentifier",
+                    "CountryIdentifier", "AVProductsInstalled",
+                    "Census_OSVersion", "EngineVersion",
+                    "AppVersion", "Census_OSBuildRevision",
+                    "GeoNameIdentifier", "OsBuildLab"]
 
-    features = CleanData(df, exclude_key_list)
+    exclude_key_list = []
 
-    transformed_features = pipelineModel.transform(features)
+    features = CleanData(df.select(initial_cols), exclude_key_list)
+    data = features.exclude_cols()
+
+    data_new = data.select(*(col(c).cast("float").alias(c) for c in data.columns))
+
+    transformed_features = pipelineModel.transform(data_new)
     prediction = lrModel.transform(transformed_features)
-
-    # add original data!
-    productID = df.select("MachineIdentifier")
-    data.withColumn(["MachineIdentifier", "HasDetections"], [productID, prediction])
 
     timestamp = encode_timestamp()
     toMysql(output_features, timestamp, False)

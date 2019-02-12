@@ -141,7 +141,6 @@ def main():
                    "GeoNameIdentifier", "OsBuildLab"]
 
     #exclude_key_list = ["MachineIdentifier", "CSVId", "HasDetections]
-    #labels = df.select("HasDetections")
     exclude_key_list = []
     data = df.select(initial_cols)
     features = CleanData(data, exclude_key_list)
@@ -150,6 +149,7 @@ def main():
     clean_pipeline = features.build_pipeline_sp()
     pipelineModel = clean_pipeline.fit(data)
 
+    # Need to convert string to doubles, otherwise Pyspark UDF will show errors
     data_new = data.select(*(col(c).cast("float").alias(c) for c in data.columns))
     final_feature = pipelineModel.transform(data_new)
 
@@ -160,11 +160,9 @@ def main():
     print "Time taken to build pipeline: " + str(timedelta) + " seconds"
 
     train, test = final_feature.randomSplit([0.7, 0.3], seed = 1000)
-    # print("Training Dataset Count: " + str(train.count()))
-    # print("Test Dataset Count: " + str(test.count()))
 
     lr = LogisticRegression(featuresCol = "features_vec", labelCol = "HasDetections",
-                            maxIter=10, regParam=0.3, elasticNetParam=0.8 )
+                            maxIter=10 )
     lrModel = lr.fit(train)
 
     timedelta, timeend = time_func.run_time(timeend)
@@ -176,24 +174,9 @@ def main():
 
     output = mlMOdel()
     lrModel.save(sc, output.output_name())
-    print("Coefficients: " + str(lrModel.coefficients))
-
-    # save df in sql (add original data)
-    productID = df.select("MachineIdentifier")
-    final_feature.join(productID)
 
     timestamp = time_func.encode_timestamp()
     toMysql(df, timestamp, True)
 
 if __name__ == "__main__":
     main()
-
-
-#SQL_CONNECTION="jdbc:mysql://localhost:3306/bigdata?user=root&password=pwd"
-
-# Top 4 important features, export their label for prediction
-
-
-# connect to flask for UI 4 charts
-
-# connext to flask for ML model
