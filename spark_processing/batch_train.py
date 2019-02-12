@@ -8,6 +8,7 @@ Created on Sat Jan 26 19:56:05 2019
 
 from schema import Schema
 import json
+from pyspark.sql.functions import col
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SQLContext, SparkSession, Row, Column
 from pyspark.sql.types import *
@@ -133,14 +134,14 @@ def main():
     df = spark.read.csv("s3a://microsoftpred/{}".format(test_obj.key), header=True, schema=Schema)
 
     #select top features
-    initial_cols = ["SmartScreen","AVProductStatesIdentifier",
+    initial_cols = ["HasDetections","SmartScreen","AVProductStatesIdentifier",
                    "CountryIdentifier", "AVProductsInstalled",
                    "Census_OSVersion", "EngineVersion",
                    "AppVersion", "Census_OSBuildRevision",
                    "GeoNameIdentifier", "OsBuildLab"]
 
     #exclude_key_list = ["MachineIdentifier", "CSVId", "HasDetections]
-    labels = df.select("HasDetections")
+    #labels = df.select("HasDetections")
     exclude_key_list = []
     data = df.select(initial_cols)
     features = CleanData(data, exclude_key_list)
@@ -153,15 +154,14 @@ def main():
     final_feature = pipelineModel.transform(data_new)
 
     output = PiplModel()
-    pipelineModel.write.save(output.output_name())
+    pipelineModel.save(output.output_name())
 
     timedelta, timeend = run_time(timestart)
     print "Time taken to build pipeline: " + str(timedelta) + " seconds"
 
-    data.withColumn("HasDetections",labels)
-    train, test = training_data.randomSplit([0.7, 0.3], seed = 1000)
-    print("Training Dataset Count: " + str(train.count()))
-    print("Test Dataset Count: " + str(test.count()))
+    train, test = final_feature.randomSplit([0.7, 0.3], seed = 1000)
+    # print("Training Dataset Count: " + str(train.count()))
+    # print("Test Dataset Count: " + str(test.count()))
 
     lr = LogisticRegression(featuresCol = "features_vec", labelCol = "HasDetections",
                             maxIter=10, regParam=0.3, elasticNetParam=0.8 )
@@ -179,8 +179,8 @@ def main():
     print("Coefficients: " + str(lrModel.coefficients))
 
     # save df in sql (add original data)
-    productID = training_data.select("MachineIdentifier")
-    output_features.withColumn("MachineIdentifier", productID)
+    productID = df.select("MachineIdentifier")
+    final_feature.join(productID)
 
     timestamp = time_func.encode_timestamp()
     toMysql(df, timestamp, True)
