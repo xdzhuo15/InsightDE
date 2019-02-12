@@ -37,7 +37,7 @@ def predict_risk(rdd, lfModel, pipelineModel):
     exclude_key_list = []
 
     features = CleanData(df.select(initial_cols), exclude_key_list)
-    data = features.fill_nullstring()
+    data = features.fill()
 
     data_new = data.select(*(col(c).cast("float").alias(c) for c in data.columns))
 

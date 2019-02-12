@@ -33,6 +33,8 @@ class CleanData:
         df = self.features
         e_list = self.exclude
         remove_label = df.select([col for col in df.columns if col not in e_list])
+        for col in remove_label.columns:
+            remove_label = remove_label.fillna({col:0.5})
         return remove_label
 
     def count_cols(self):
@@ -145,7 +147,7 @@ def main():
     data = df.select(initial_cols)
     features = CleanData(data, exclude_key_list)
 
-    data = features.fill_nullstring()
+    data = features.fill_null()
     clean_pipeline = features.build_pipeline_sp()
     pipelineModel = clean_pipeline.fit(data)
 
