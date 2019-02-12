@@ -150,9 +150,14 @@ def main():
     pipelineModel = clean_pipeline.fit(data)
 
     old_cols = data.columns
+    n = len(old_cols)
     for col in old_cols:
-        data.withColumn(col, data[col].cast(DoubleType()))
-    final_feature = pipelineModel.transform(data)
+        data_new = data.withColumn(col, data[col].cast(DoubleType()))
+        data.withColumn(data_new)
+    print data.columns
+    all_cols = data.columns
+    new_cols = all_cols[n:]
+    final_feature = pipelineModel.transform(data.select(new_cols))
 
     output = PiplModel()
     pipelineModel.write.save(output.output_name())
