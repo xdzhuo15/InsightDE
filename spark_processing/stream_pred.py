@@ -47,27 +47,24 @@ def predict_risk(rdd, lfModel, pipelineModel):
     timestamp = encode_timestamp()
     toMysql(output_features, timestamp, False)
 
-def main():
-    conf = SparkConf().setAppName("prediction").setMaster(
+
+conf = SparkConf().setAppName("prediction").setMaster(
             "spark://ec2-52-10-44-193.us-west-2.compute.amazonaws.com:7077"
             )
-    sc = SparkContext(conf=conf)
-    sc.setLogLevel("WARN")
-    ssc = StreamingContext(sc, 1)
+sc = SparkContext(conf=conf)
+sc.setLogLevel("WARN")
+ssc = StreamingContext(sc, 1)
 
-    #load saved pipeline, model, and parameters
-    lrModel = mlMOdel()
-    savedModel = LogisticRegressionModel.load(sc, model.data_file())
-    pipe = PiplModel()
-    pipelineModel = Pipeline.read.load(pipe.data_file())
+#load saved pipeline, model, and parameters
+lrModel = mlMOdel()
+savedModel = LogisticRegressionModel.load(sc, model.data_file())
+pipe = PiplModel()
+pipelineModel = Pipeline.read.load(pipe.data_file())
 
-    kafka_stream = KafkaUtils.createDirectStream(ssc, ["DeviceRecord"],
+kafka_stream = KafkaUtils.createDirectStream(ssc, ["DeviceRecord"],
             {"metadata.broker.list":"ip-10-0-0-7:9092,ip-10-0-0-11:9092,ip-10-0-0-10:9092"})
-    kafka_stream.map(lambda (key, value): json.loads(value))
-    kafka_stream = get_kafkastream()
-    kafka_stream.foreachRDD(lambda x: predict_risk(x))
-    ssc.start()
-    ssc.awaitTermination()
-
-if __init__ == "__main__":
-    main()
+kafka_stream.map(lambda (key, value): json.loads(value))
+kafka_stream = get_kafkastream()
+kafka_stream.foreachRDD(lambda x: predict_risk(x))
+ssc.start()
+ssc.awaitTermination()
