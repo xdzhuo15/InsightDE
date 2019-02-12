@@ -114,6 +114,7 @@ class CleanData:
             norm_feature = MinMaxScaler(inputCol = col, outputCol=col + "_norm")
             stages += [norm_feature]
         finalized_cols = [ c + "_norm" for c in categorical_cols ] + [ c + "_norm" for c in numerical_cols]
+        print finalized_cols
         selected_features = train_data.select(finalized_cols)
         assembler = VectorAssembler(inputCols=selected_features, outputCol="features_vec")
         stages += [assembler]
@@ -139,7 +140,7 @@ def main():
     df = spark.read.csv("s3a://microsoftpred/{}".format(test_obj.key), header=True, schema=Schema)
 
     # select top features
-    select_cols = ["SmartScreen","AVProductStatesIdentifier",
+    initial_cols = ["SmartScreen","AVProductStatesIdentifier",
                    "CountryIdentifier", "AVProductsInstalled",
                    "Census_OSVersion", "EngineVersion",
                    "AppVersion", "Census_OSBuildRevision",
@@ -148,7 +149,7 @@ def main():
     # exclude_key_list = ["MachineIdentifier", "CSVId", "HasDetections]
     labels = df.select("HasDetections")
     exclude_key_list = []
-    data = df.select(select_cols)
+    data = df.select(initial_cols)
     features = CleanData(data, exclude_key_list)
 
     clean_pipeline = features.build_pipeline_sp()
@@ -161,7 +162,7 @@ def main():
     timedelta, timeend = run_time(timestart)
     print "Time taken to build pipeline: " + str(timedelta) + " seconds"
 
-    selected_cols = [ "features_vec"] + selected_features
+    selected_cols = [ "features_vec"] + initial_cols
     training_data =  transformed_features.select(selected_cols)
     training_data.withColumn(labels)
     train, test = training_data.randomSplit([0.7, 0.3], seed = 1000)
