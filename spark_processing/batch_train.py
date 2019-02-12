@@ -145,7 +145,7 @@ def main():
     data = df.select(initial_cols)
     features = CleanData(data, exclude_key_list)
 
-    data = features.exclude_cols()
+    data = features.fill_nullstring()
     clean_pipeline = features.build_pipeline_sp()
     pipelineModel = clean_pipeline.fit(data)
 
