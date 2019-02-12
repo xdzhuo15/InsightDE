@@ -11,7 +11,7 @@ import json
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SQLContext, SparkSession, Row, Column
 from pyspark.sql.types import *
-from pyspark.ml.feature import VectorAssembler, MinMaxScaler, StringIndexer
+from pyspark.ml.feature import VectorAssembler, StringIndexer
 from pyspark.ml.classification import LogisticRegression
 from pyspark.ml import Pipeline
 from pyspark.ml.evaluation import BinaryClassificationEvaluator
@@ -108,13 +108,8 @@ class CleanData:
         stages = []
         for col in categorical_cols:
             encoder = StringIndexer(inputCol = col, outputCol = col+"_cleaned")
-            norm_feature = MinMaxScaler(inputCol=stringIndexer.getOutputCol(), outputCol=col + "_norm")
-            stages += [encoder + norm_feature]
-        for col in numerical_cols:
-            norm_feature = MinMaxScaler(inputCol = col, outputCol=col + "_norm")
-            stages += [norm_feature]
-        finalized_cols = [ c + "_norm" for c in categorical_cols ] + [ c + "_norm" for c in numerical_cols]
-        print finalized_cols
+            stages += [encoder]
+        finalized_cols = [ c + "_cleaned" for c in categorical_cols ] + [ c for c in numerical_cols]
         selected_features = train_data.select(finalized_cols)
         assembler = VectorAssembler(inputCols=selected_features, outputCol="features_vec")
         stages += [assembler]
@@ -139,22 +134,22 @@ def main():
 
     df = spark.read.csv("s3a://microsoftpred/{}".format(test_obj.key), header=True, schema=Schema)
 
-    # select top features
+    select top features
     initial_cols = ["SmartScreen","AVProductStatesIdentifier",
                    "CountryIdentifier", "AVProductsInstalled",
                    "Census_OSVersion", "EngineVersion",
                    "AppVersion", "Census_OSBuildRevision",
                    "GeoNameIdentifier", "OsBuildLab"]
 
-    # exclude_key_list = ["MachineIdentifier", "CSVId", "HasDetections]
+    #exclude_key_list = ["MachineIdentifier", "CSVId", "HasDetections]
     labels = df.select("HasDetections")
     exclude_key_list = []
     data = df.select(initial_cols)
     features = CleanData(data, exclude_key_list)
 
     clean_pipeline = features.build_pipeline_sp()
-    pipelineModel = clean_pipeline.fit(features)
-    transformed_features = pipelineModel.transform(features)
+    pipelineModel = clean_pipeline.fit(data)
+    data = pipelineModel.transform(data)
 
     output = PiplModel()
     pipelineModel.write.save(output.output_name())
@@ -162,9 +157,7 @@ def main():
     timedelta, timeend = run_time(timestart)
     print "Time taken to build pipeline: " + str(timedelta) + " seconds"
 
-    selected_cols = [ "features_vec"] + initial_cols
-    training_data =  transformed_features.select(selected_cols)
-    training_data.withColumn(labels)
+    data.withColumn("HasDetections",labels)
     train, test = training_data.randomSplit([0.7, 0.3], seed = 1000)
     print("Training Dataset Count: " + str(train.count()))
     print("Test Dataset Count: " + str(test.count()))
@@ -189,7 +182,7 @@ def main():
     output_features.withColumn("MachineIdentifier", productID)
 
     timestamp = time_func.encode_timestamp()
-    toMysql(output_features, timestamp, True)
+    toMysql(df, timestamp, True)
 
 if __name__ == "__main__":
     main()
