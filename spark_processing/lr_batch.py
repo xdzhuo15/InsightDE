@@ -112,6 +112,9 @@ class CleanData:
         assembler = VectorAssembler(inputCols=finalized_cols, outputCol="features_vec")
         stages += [assembler]
         pipeline = Pipeline(stages = stages)
+        lr = LinearRegression(featuresCol = 'features_vec', labelCol='HasDetections',
+                        maxIter=10 )
+        stages += [lr]
         return pipeline
 
 
@@ -158,22 +161,22 @@ def main():
     timedelta, timeend = run_time(timestart)
     print "Time taken to build pipeline: " + str(timedelta) + " seconds"
 
-    train, test = final_feature.randomSplit([0.7, 0.3], seed = 1000)
+    #train, test = final_feature.randomSplit([0.7, 0.3], seed = 1000)
 
-    lr = LinearRegression(featuresCol = 'features_vec', labelCol='HasDetections',
-                    maxIter=10 )
-    lrModel = lr.fit(train)
+    #lr = LinearRegression(featuresCol = 'features_vec', labelCol='HasDetections',
+    #                maxIter=10 )
+    #lrModel = lr.fit(train)
 
-    timedelta, timeend = time_func.run_time(timeend)
-    print "Time taken to train the model: " + str(timedelta) + " seconds"
+    #timedelta, timeend = time_func.run_time(timeend)
+    #print "Time taken to train the model: " + str(timedelta) + " seconds"
 
-    validation = lrModel.transform(test)
-    print('Test Area Under ROC', evaluator.evaluate(validation))
+    #validation = lrModel.transform(test)
+    #print('Test Area Under ROC', evaluator.evaluate(validation))
 
-    output = mlMOdel()
-    lrModel.save(sc, output.output_name())
+    #output = mlMOdel()
+    #lrModel.save(sc, output.output_name())
 
-    timestamp = time_func.encode_timestamp()
+    #timestamp = time_func.encode_timestamp()
     toMysql(df, timestamp, True)
 
 if __name__ == "__main__":
