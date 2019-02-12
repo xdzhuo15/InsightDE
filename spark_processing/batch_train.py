@@ -108,13 +108,13 @@ class CleanData:
         stages = []
         for col in categorical_cols:
             encoder = StringIndexer(inputCol = col, outputCol = col+"_cleaned")
-            stages += [encoder]
-        selected_cols = [ c + "_cleaned" for c in categorical_cols ]+[ c for c in numerical_cols ]
-        for col in selected_cols:
+            norm_feature = MinMaxScaler(inputCol=stringIndexer.getOutputCol(), outputCol=col + "_norm")
+            stages += [encoder + norm_feature]
+        for col in numerical_cols:
             norm_feature = MinMaxScaler(inputCol = col, outputCol=col + "_norm")
             stages += [norm_feature]
-        finalized_cols_sp = [ c + "_norm" for c in selected_cols ]
-        selected_features = train_data.select(finalized_cols_sp)
+        finalized_cols = [ c + "_norm" for c in categorical_cols ] + [ c + "_norm" for c in numerical_cols]
+        selected_features = train_data.select(finalized_cols)
         assembler = VectorAssembler(inputCols=selected_features, outputCol="features_vec")
         stages += [assembler]
         pipeline = Pipeline(stages = stages)
