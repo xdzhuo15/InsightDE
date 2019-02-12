@@ -149,11 +149,11 @@ def main():
 
     data = features.exclude_cols()
     clean_pipeline = features.build_pipeline_sp()
-    pipelineModel = clean_pipeline.fit(data)
 
     # Need to convert string to doubles, otherwise Pyspark UDF will show errors
     data_new = data.select(*(col(c).cast("float").alias(c) for c in data.columns))
-    final_feature = pipelineModel.transform(data_new)
+    pipelineModel = clean_pipeline.fit(data_new)
+    #final_feature = pipelineModel.transform(data_new)
 
     output = PiplModel()
     pipelineModel.save(output.output_name())
