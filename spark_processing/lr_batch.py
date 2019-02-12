@@ -149,7 +149,7 @@ def main():
     data = df.select(initial_cols)
     features = CleanData(data, exclude_key_list)
 
-    data = features.fill()
+    data = features.exclude_cols()
     clean_pipeline = features.build_pipeline_sp()
 
     # Need to convert string to doubles, otherwise Pyspark UDF will show errors
