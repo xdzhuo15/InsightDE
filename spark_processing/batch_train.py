@@ -145,9 +145,14 @@ def main():
     data = df.select(initial_cols)
     features = CleanData(data, exclude_key_list)
 
+    data = features.exclude_cols()
     clean_pipeline = features.build_pipeline_sp()
     pipelineModel = clean_pipeline.fit(data)
-    data = pipelineModel.transform(data)
+
+    old_cols = data.columns
+    for col in old_cols:
+        data.withColumn(col, data[col].cast(DoubleType()))
+    final_feature = pipelineModel.transform(data)
 
     output = PiplModel()
     pipelineModel.write.save(output.output_name())
