@@ -138,9 +138,18 @@ def main():
 
     df = spark.read.csv("s3a://microsoftpred/{}".format(test_obj.key), header=True, schema=Schema)
 
-    exclude_key_list = ["MachineIdentifier", "CSVId", "HasDetections"]
+    # select top features
+    select_cols = ["SmartScreen","AVProductStatesIdentifier",
+                   "CountryIdentifier", "AVProductsInstalled",
+                   "Census_OSVersion", "EngineVersion",
+                   "AppVersion", "Census_OSBuildRevision",
+                   "GeoNameIdentifier", "OsBuildLab"]
+
+    # exclude_key_list = ["MachineIdentifier", "CSVId", "HasDetections]
     labels = df.select("HasDetections")
-    features = CleanData(df, exclude_key_list)
+    exclude_key_list = []
+    data = df.select(select_cols)
+    features = CleanData(data, exclude_key_list)
 
     clean_pipeline = features.build_pipeline_sp()
     pipelineModel = clean_pipeline.fit(features)
