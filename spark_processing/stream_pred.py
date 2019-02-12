@@ -57,7 +57,7 @@ ssc = StreamingContext(sc, 1)
 
 #load saved pipeline, model, and parameters
 lrModel = mlMOdel()
-savedModel = LogisticRegressionModel.load(sc, model.data_file())
+savedModel = LogisticRegressionModel.load(sc, lrModel.data_file())
 pipe = PiplModel()
 pipelineModel = Pipeline.read.load(pipe.data_file())
 
