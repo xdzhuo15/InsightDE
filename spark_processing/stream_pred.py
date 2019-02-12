@@ -16,7 +16,7 @@ from io_modules import *
 import json
 from batch_train import CleanData
 from pyspark.ml import Pipeline
-from pyspark.ml.classification import LogisticRegression
+from pyspark.ml.classification import LogisticRegression, LogisticRegressionModel
 import mysql.connector
 from pyspark.ml.feature import VectorAssembler, MinMaxScaler, StringIndexer
 import datetime
