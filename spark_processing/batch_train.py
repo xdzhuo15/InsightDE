@@ -114,7 +114,7 @@ class CleanData:
             norm_feature = MinMaxScaler(inputCol = col, outputCol=col + "_norm")
             stages += [norm_feature]
         finalized_cols_sp = [ c + "_norm" for c in selected_cols ]
-        selected_features = self.final.select(finalized_cols_sp)
+        selected_features = train_data.select(finalized_cols_sp)
         assembler = VectorAssembler(inputCols=selected_features, outputCol="features_vec")
         stages += [assembler]
         pipeline = Pipeline(stages = stages)
