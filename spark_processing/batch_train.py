@@ -118,7 +118,7 @@ class CleanData:
         assembler = VectorAssembler(inputCols=selected_features, outputCol="features_vec")
         stages += [assembler]
         pipeline = Pipeline(stages = stages)
-        return pipeline, selected_features
+        return pipeline
 
 
 def main():
@@ -142,9 +142,9 @@ def main():
     labels = df.select("HasDetections")
     features = CleanData(df, exclude_key_list)
 
-    clean_pipeline, selected_features = features.build_pipeline_sp()
-    pipelineModel = clean_pipeline.fit(clean_features)
-    transformed_features = pipelineModel.transform(clean_features)
+    clean_pipeline = features.build_pipeline_sp()
+    pipelineModel = clean_pipeline.fit(features)
+    transformed_features = pipelineModel.transform(features)
 
     output = PiplModel()
     pipelineModel.write.save(output.output_name())
