@@ -95,8 +95,7 @@ class CleanData:
             norm_feature = MinMaxScaler(inputCol = col, outputCol=col + "_norm")
             stages +=[norm_feature]
         finalized_cols = [ c + "_norm" for c in selected_cols ]
-        selected_features = final.select(finalized_cols)
-        assembler = VectorAssembler(inputCols=selected_features, outputCol="features_vec")
+        assembler = VectorAssembler(inputCols=finalized_cols, outputCol="features_vec")
         stages +=[assembler]
         pipeline = Pipeline(stages = stages)
         return pipeline, selected_features
@@ -110,8 +109,7 @@ class CleanData:
             encoder = StringIndexer(inputCol = col, outputCol = col+"_cleaned")
             stages += [encoder]
         finalized_cols = [ c + "_cleaned" for c in categorical_cols ] + [ c for c in numerical_cols]
-        selected_features = train_data.select(finalized_cols)
-        assembler = VectorAssembler(inputCols=selected_features, outputCol="features_vec")
+        assembler = VectorAssembler(inputCols=finalized_cols, outputCol="features_vec")
         stages += [assembler]
         pipeline = Pipeline(stages = stages)
         return pipeline
@@ -134,7 +132,7 @@ def main():
 
     df = spark.read.csv("s3a://microsoftpred/{}".format(test_obj.key), header=True, schema=Schema)
 
-    select top features
+    #select top features
     initial_cols = ["SmartScreen","AVProductStatesIdentifier",
                    "CountryIdentifier", "AVProductsInstalled",
                    "Census_OSVersion", "EngineVersion",
