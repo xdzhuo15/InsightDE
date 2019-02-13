@@ -26,6 +26,7 @@ def user_data(data, N):
 if __name__ == "__main__":
     file_name = "test.csv"
     producer = KafkaProducer(bootstrap_servers = "localhost:9092")
-    data = pd.read_csv(file_name, index_col=0, low_memory=False )   
+    data = pd.read_csv(file_name, index_col=0, low_memory=False )
+    data. fillna(0, inplace = True)
     N = 10000
     user_data(data, N)

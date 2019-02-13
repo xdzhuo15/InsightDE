@@ -26,13 +26,14 @@ class CleanData:
     def __init__(self, data, exclude_key_list):
         self.features = data
         self.exclude = exclude_key_list
+        # True or False
 
     def exclude_cols(self):
         df = self.features
         e_list = self.exclude
         remove_label = df.select([col for col in df.columns if col not in e_list])
-        remove_label = remove_label.na.fill('NA')
-        remove_label = remove_label.na.fill(0)
+        for col in remove_label.columns:
+            remove_label = remove_label.fillna({col:0.5})
         return remove_label
 
     def count_cols(self):
@@ -50,11 +51,10 @@ class CleanData:
     # Map count for categorical variables
     def map_category_train(self):
         para_dict = {}
-        mapped_trn = self.fill_nullstring()
+        mapped_trn = self.exclude_cols()
         categorical_cols, numerical_cols = self.count_cols()
         for col in categorical_cols:
-            select_col = col + "_encoded"
-            one_col = mapped_trn.select(select_col)
+            one_col = mapped_trn.select(col)
             category_dict = one_col.grouBy().count()
             para_dict[col] = category_dict
             mapped_col=one_col.na.replace(category_dict, 1)
@@ -69,11 +69,10 @@ class CleanData:
     def map_category_pred(self):
         output = CountOutput()
         para_json = output.read_file()
-        mapped_str=self.fill_nullstring()
+        mapped_str=self.exclude_cols()
         if para_json != {}:
             for key in para_json.keys():
-                select_col = key + "_encoded"
-                one_col = mapped_str.select(select_col)
+                one_col = mapped_str.select(key)
                 mapped_col=one_col.na.replace(para_json[key], 1)
                 mapped_str.withColumn(key+"_mapped",mapped_col)
         return mapped_str
@@ -91,7 +90,7 @@ class CleanData:
         assembler = VectorAssembler(inputCols=finalized_cols, outputCol="features_vec")
         stages +=[assembler]
         pipeline = Pipeline(stages = stages)
-        return pipeline, selected_features
+        return pipeline
 
     # With feature library to simplify
     def build_pipeline_sp(self):
@@ -105,7 +104,7 @@ class CleanData:
         assembler = VectorAssembler(inputCols=finalized_cols, outputCol="features_vec")
         stages += [assembler]
         pipeline = Pipeline(stages = stages)
-        lr = LinearRegression(featuresCol = 'features_vec', labelCol='HasDetections',
+        lr = LinearRegression(featuresCol = "features_vec", labelCol="HasDetections",
                         maxIter=10 )
         stages += [lr]
         return pipeline
@@ -126,7 +125,8 @@ def main():
     sc = SparkContext(conf=conf)
     spark = SparkSession.builder.appName("training").getOrCreate()
 
-    df = spark.read.csv("s3a://microsoftpred/{}".format(test_obj.key), header=True, schema=Schema)
+    #df = spark.read.csv("s3a://microsoftpred/{}".format(test_obj.key), header=True, schema=Schema)
+    df = spark.read.csv("train_test.csv")
 
     #select top features
     initial_cols = ["HasDetections","SmartScreen","AVProductStatesIdentifier",
@@ -136,17 +136,24 @@ def main():
                    "GeoNameIdentifier", "OsBuildLab"]
 
     #exclude_key_list = ["MachineIdentifier", "CSVId", "HasDetections]
-    exclude_key_list = []
     data = df.select(initial_cols)
-    features = CleanData(data, exclude_key_list)
+    exclude_key_list = ["HasDetections"]
+    train, test = data.randomSplit([0.7, 0.3], seed = 1000)
 
-    data = features.exclude_cols()
-    clean_pipeline = features.build_pipeline_sp()
-
+    # Training
+    features_trn = CleanData(train, exclude_key_list)
+    data_trn = features_trn.exclude_cols()
+    clean_pipeline = features_trn.build_pipeline_sp()
     # Need to convert string to doubles, otherwise Pyspark UDF will show errors
-    data_new = data.select(*(col(c).cast("float").alias(c) for c in data.columns))
-    pipelineModel = clean_pipeline.fit(data_new)
-    #final_feature = pipelineModel.transform(data_new)
+    data_trn_flt = train.select(*(col(c).cast("float").alias(c) for c in train.columns))
+    pipelineModel = clean_pipeline.fit(data_trn_flt)
+
+    # Validation
+    features_val = CleanData(train, exclude_key_list)
+    data_val = features_val.exclude_cols()
+    data_val_flt = test.select(*(col(c).cast("float").alias(c) for c in test.columns))
+    pipelineModel = clean_pipeline.transform(data_val_flt)
+
 
     output = PiplModel()
     pipelineModel.save(output.output_name())

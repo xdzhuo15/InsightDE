@@ -48,23 +48,14 @@ class CleanData:
                 numerical_cols.append(types[0])
         return categorical_cols, numerical_cols
 
-    def fill_nullstring(self):
-        filter_category = self.exclude_cols()
-        categorical_cols, numerical_cols = self.count_cols()
-        for col in categorical_cols:
-            one_col = filter_category.select(col).na.fill("Empty")
-            filter_category.withColumn(col+"_encoded",one_col)
-            return filter_category
-
     # Count disctinct for strings and save to HDFS json
     # Map count for categorical variables
     def map_category_train(self):
         para_dict = {}
-        mapped_trn = self.fill_nullstring()
+        mapped_trn = self.exclude_cols()
         categorical_cols, numerical_cols = self.count_cols()
         for col in categorical_cols:
-            select_col = col + "_encoded"
-            one_col = mapped_trn.select(select_col)
+            one_col = mapped_trn.select(col)
             category_dict = one_col.grouBy().count()
             para_dict[col] = category_dict
             mapped_col=one_col.na.replace(category_dict, 1)
@@ -79,11 +70,10 @@ class CleanData:
     def map_category_pred(self):
         output = CountOutput()
         para_json = output.read_file()
-        mapped_str=self.fill_nullstring()
+        mapped_str=self.exclude_cols()
         if para_json != {}:
             for key in para_json.keys():
-                select_col = key + "_encoded"
-                one_col = mapped_str.select(select_col)
+                one_col = mapped_str.select(key)
                 mapped_col=one_col.na.replace(para_json[key], 1)
                 mapped_str.withColumn(key+"_mapped",mapped_col)
         return mapped_str
@@ -101,7 +91,7 @@ class CleanData:
         assembler = VectorAssembler(inputCols=finalized_cols, outputCol="features_vec")
         stages +=[assembler]
         pipeline = Pipeline(stages = stages)
-        return pipeline, selected_features
+        return pipeline
 
     # With feature library to simplify
     def build_pipeline_sp(self):
@@ -143,7 +133,7 @@ def main():
                    "GeoNameIdentifier", "OsBuildLab"]
 
     #exclude_key_list = ["MachineIdentifier", "CSVId", "HasDetections]
-    exclude_key_list = []
+    exclude_key_list = ["HasDetections"]
     data = df.select(initial_cols)
     features = CleanData(data, exclude_key_list)
 
