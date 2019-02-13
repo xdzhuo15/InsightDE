@@ -26,14 +26,13 @@ class CleanData:
     def __init__(self, data, exclude_key_list):
         self.features = data
         self.exclude = exclude_key_list
-        # True or False
 
     def exclude_cols(self):
         df = self.features
         e_list = self.exclude
         remove_label = df.select([col for col in df.columns if col not in e_list])
-        for col in remove_label.columns:
-            remove_label = remove_label.fillna({col:0.5})
+        remove_label = remove_label.na.fill('NA')
+        remove_label = remove_label.na.fill(0)
         return remove_label
 
     def count_cols(self):
@@ -46,14 +45,6 @@ class CleanData:
             else:
                 numerical_cols.append(types[0])
         return categorical_cols, numerical_cols
-
-    def fill_nullstring(self):
-        filter_category = self.exclude_cols()
-        categorical_cols, numerical_cols = self.count_cols()
-        for col in categorical_cols:
-            one_col = filter_category.select(col).na.fill("Empty")
-            filter_category.withColumn(col+"_encoded",one_col)
-            return filter_category
 
     # Count disctinct for strings and save to HDFS json
     # Map count for categorical variables
