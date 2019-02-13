@@ -1,4 +1,4 @@
-import freqencoder import FreqEncoder, FreqEncoderModel
+import custom_module import FreqEncoder, FreqEncoderModel
 from pyspark.sql import SQLContext, SparkSession
 from pyspark.ml.feature import Imputer, VectorAssembler, MinMaxScaler, StringIndexer
 import pyspark
