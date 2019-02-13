@@ -126,7 +126,7 @@ def main():
     spark = SparkSession.builder.appName("training").getOrCreate()
 
     #df = spark.read.csv("s3a://microsoftpred/{}".format(test_obj.key), header=True, schema=Schema)
-    df = spark.read.csv("train_test.csv")
+    df = spark.read.csv("train_test.csv", header=True)
 
     #select top features
     initial_cols = ["HasDetections","SmartScreen","AVProductStatesIdentifier",
