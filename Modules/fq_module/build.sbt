@@ -1,4 +1,4 @@
-name := "spark-mllib-fq"
+name := "custom_model"
 
 version := "0.1"
 
