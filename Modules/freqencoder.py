@@ -20,14 +20,15 @@ class FreqEncoder(Estimator, HasInputCol, HasOutputCol):
         return self._set(**kwargs)
 
     def countValues(self, dataset):
-        in_col = dataset[self.getInputCol()].collect()
+        in_col = dataset[self.getInputCol]
+        data = in_col.collect()
         bins = {}
-        for value in in_col:
-            if value in bins:
-                bins[value] += 1
-            else:
-                bins[value] = 1
-        return bins
+	for value in data:
+	    if value in bins:
+	        bins[value] += 1
+	    else:
+	        bins[value] = 1
+	return bins
 
     def exportBins(self, bins):
         object = CountOutput()
@@ -35,8 +36,8 @@ class FreqEncoder(Estimator, HasInputCol, HasOutputCol):
             json.dump(bins, f)
 
     def _fit(self, dataset):
-        bins = countValues(dataset)
-        exportBins(bins)
+        bins = self.countValues(dataset)
+        self.exportBins(bins)
         return (FreqEncoderModel()
                .getInputCol(in_col)
                .getOutputCol(self.getOutputCol()))
