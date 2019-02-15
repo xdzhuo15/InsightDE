@@ -28,22 +28,16 @@ class FreqEncoder(Estimator, HasInputCol, HasOutputCol):
 
     def _fit(self, dataset):
 
-        def countValues(value, bins):
-           if value is None:
-                if "Empty" in bins:
-                    bins["Empty"] += 1
-                else:
-                    bins["Empty"] = 1
-            elif value in bins:
-                bins[value] += 1
-            else:
-                bins[value] = 1
-     
-        udf_count = udf(lambda value: countValues(value, bins))
+        c = self.getInputCol()
+
+        bins = dataset[c]
+                    .toDF()
+                    .groupBy(c).agg(count(c))
+                    .asDict()
+                    .collect()
 
         in_col = dataset[self.getInputCol()]
-       
-        udf_count(in_col, self.bins)
+
         self.exportBins(bins)
 
         return (FreqEncoderModel()
