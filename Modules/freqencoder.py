@@ -19,25 +19,31 @@ class FreqEncoder(Estimator, HasInputCol, HasOutputCol):
         kwargs = self._input_kwargs
         return self._set(**kwargs)
 
-    def countValues(self, dataset):
-        in_col = dataset[self.getInputCol]
-        data = in_col.collect()
-        bins = {}
-	for value in data:
-	    if value in bins:
-	        bins[value] += 1
-	    else:
-	        bins[value] = 1
-	return bins
-
     def exportBins(self, bins):
         object = CountOutput()
         with open(object.output_name(), 'w') as f:
             json.dump(bins, f)
 
     def _fit(self, dataset):
-        bins = self.countValues(dataset)
-        self.exportBins(bins)
+
+        def countValues(value, bins):
+            if value is None:
+                if "Empty" in bins:
+                    bins["Empty"] += 1
+                else:
+                    bins["Empty"] = 1
+            elif value in bins:
+                bins[value] += 1
+            else:
+                bins[value] = 1
+        	return bins
+
+        udf_count = udf(lambda value: countValues(value, bins), MapType(StringType(), LongType()))
+
+        in_col = dataset[self.getInputCol]
+        bins = {}
+        self.exportBins(udf_count(in_col, bins))
+
         return (FreqEncoderModel()
                .getInputCol(in_col)
                .getOutputCol(self.getOutputCol()))
@@ -49,17 +55,18 @@ class FreqEncoderModel(Transformer, HasInputCol, HasOutputCol):
         bins = object.read_file()
         return bins
 
-    def mapValue(value, bins):
-        if value is None or value not in bins:
-            return 0
-        else:
-            return bins[value]
-
     def _transform(self, dataset):
+
+        def mapValue(value, bins):
+            if value is None or value not in bins:
+                return 0
+            else:
+                return bins[value]
+
         out_col = self.getOutputCol()
         in_col = dataset[self.getInputCol()]
     # Define transformer
-        bins = readBin()
-        udf_map = udf(lambda value: mapValue(value, bins), Long())
+        bins = self.readBin()
+        udf_map = udf(lambda value: mapValue(value, bins), LongType())
 
         return dataset.withColumn(out_col, udf_map(in_col))
