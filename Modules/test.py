@@ -1,18 +1,11 @@
 from freqencoder import FreqEncoder, FreqEncoderModel
 from pyspark.sql import SQLContext, SparkSession
-from pyspark.ml.feature import Imputer, VectorAssembler, MinMaxScaler, StringIndexer
+from pyspark.ml.feature import StringIndexer
 import pyspark
 from pyspark import SparkConf
 
-conf = SparkConf()
-conf.set("spark.executor.memory", "1g")
-conf.set("spark.cores.max", "2")
-conf.set("spark.jars", 'spark-mllib-custom-models-assembly-0.1.jar')
-conf.set("spark.app.name", "sparkTestApp")
 
-spark = pyspark.sql.SparkSession.builder.config(conf=conf).getOrCreate()
-
-#spark = SparkSession.builder.appName("ReadData").getOrCreate()
+spark = SparkSession.builder.appName("ReadData").getOrCreate()
 
 data = [
     ("Tax", 3),
