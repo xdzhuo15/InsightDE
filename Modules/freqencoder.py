@@ -2,7 +2,7 @@ from pyspark import keyword_only
 from pyspark.ml.pipeline import Estimator, Model, Pipeline
 from pyspark.ml.pipeline import Transformer
 from pyspark.ml.param.shared import HasInputCol, HasOutputCol, Param
-from pyspark.sql.functions import udf, create_map, lit
+from pyspark.sql.functions import udf, count
 from io_modules import CountOutput
 from pyspark.sql.types import MapType, StringType, LongType
 
@@ -30,11 +30,7 @@ class FreqEncoder(Estimator, HasInputCol, HasOutputCol):
 
         c = self.getInputCol()
 
-        bins = dataset[c]
-                    .toDF()
-                    .groupBy(c).agg(count(c))
-                    .asDict()
-                    .collect()
+        bins = dataset.groupBy(c).agg(count(c)).collect()
 
         in_col = dataset[self.getInputCol()]
 

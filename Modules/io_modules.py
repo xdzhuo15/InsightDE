@@ -31,14 +31,14 @@ class IoObject:
 
 class mlMOdel(IoObject):
     def __init__(self):
-        self.folder_path = "model/"
-        self.file_path = "model/lrm_model_"
-        self.file_suf = ".model"
+        self.folder_path = "/home/ubuntu/model/model/"
+        self.file_path = "/home/ubuntu/model/model/lrm_model_"
+        self.file_suf = ""
 
 class CountOutput(IoObject):
     def __init__(self):
-        self.folder_path = "para/"
-        self.file_path = "para/feature_para_"
+        self.folder_path = "/home/ubuntu/model/para/"
+        self.file_path = "/home/ubuntu/model/para/feature_para_"
         self.file_suf = ".json"
 
     def read_file(self):
@@ -52,8 +52,8 @@ class CountOutput(IoObject):
 
 class PiplModel(IoObject):
     def __init__(self):
-        self.folder_path = "/pipeline/"
-        self.file_path = "/pipeline/pipeline_model_"
+        self.folder_path = "/home/ubuntu/model/pipeline/"
+        self.file_path = "/home/ubuntu/model/pipeline/pipeline_model_"
         self.file_suf = ""
 
 

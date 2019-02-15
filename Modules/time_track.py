@@ -7,7 +7,7 @@ Created on Tue Feb  5 12:18:26 2019
 """
 import datetime
 
-def encode_timestamp(self):
+def encode_timestamp():
     return unicode(datetime.datetime.now()).replace(" ","").replace(":","")
 
 def run_time(time_start):
