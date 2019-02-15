@@ -26,8 +26,10 @@ data.transform(df).show()
 
 freqencoder = FreqEncoder() \
     .setInputCol("input") \
-    .setOutputCol("bin")
+    .setOutputCol("count")
 
 model = freqencoder.fit(df)
 
 model.transform(df).show()
+
+

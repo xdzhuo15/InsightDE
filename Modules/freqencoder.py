@@ -1,10 +1,11 @@
+import json
 from pyspark import keyword_only
 from pyspark.ml.pipeline import Estimator, Model, Pipeline
 from pyspark.ml.pipeline import Transformer
 from pyspark.ml.param.shared import HasInputCol, HasOutputCol, Param
 from pyspark.sql.functions import udf, count
 from io_modules import CountOutput
-from pyspark.sql.types import MapType, StringType, LongType
+from pyspark.sql.types import MapType, StringType, IntegerType
 
 # Create a custom word count transformer class
 class FreqEncoder(Estimator, HasInputCol, HasOutputCol):
@@ -32,17 +33,21 @@ class FreqEncoder(Estimator, HasInputCol, HasOutputCol):
 
         bins = dataset.groupBy(c).agg(count(c)).collect()
 
+        bin_dict = {}
+        for row in bins:
+            bin_dict[row[0]] = row[1]
+        
         in_col = dataset[self.getInputCol()]
 
-        self.exportBins(bins)
+        self.exportBins(bin_dict)
 
         return (FreqEncoderModel()
-               .getInputCol(in_col)
-               .getOutputCol(self.getOutputCol()))
+               .setInputCol(c)
+               .setOutputCol(self.getOutputCol()))
 
 
 class FreqEncoderModel(Transformer, HasInputCol, HasOutputCol):
-    def readBin():
+    def readBin(self):
         object = CountOutput()
         bins = object.read_file()
         return bins
@@ -57,8 +62,9 @@ class FreqEncoderModel(Transformer, HasInputCol, HasOutputCol):
 
         out_col = self.getOutputCol()
         in_col = dataset[self.getInputCol()]
-    # Define transformer
+        # Define transformer
         bins = self.readBin()
-        udf_map = udf(lambda value: mapValue(value, bins), LongType())
+        print bins
+        udf_map = udf(lambda value: mapValue(value, bins), IntegerType())
 
         return dataset.withColumn(out_col, udf_map(in_col))
