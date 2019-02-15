@@ -1,21 +1,22 @@
-from pyspark.ml.util import keyword_only
+from pyspark import keyword_only
 from pyspark.ml.pipeline import Estimator, Model, Pipeline
 from pyspark.ml.pipeline import Transformer
 from pyspark.ml.param.shared import HasInputCol, HasOutputCol, Param
 from pyspark.sql.functions import udf
 from io_modules import CountOutput
-
+        
 # Create a custom word count transformer class
 class FreqEncoder(Estimator, HasInputCol, HasOutputCol):
+
     @keyword_only
     def __init__(self, inputCol=None, outputCol=None):
         super(FreqEncoder, self).__init__()
-        kwargs = self.__init__._input_kwargs
+        kwargs = self._input_kwargs
         self.setParams(**kwargs)
 
     @keyword_only
     def setParams(self, inputCol=None, outputCol=None):
-        kwargs = self.setParams._input_kwargs
+        kwargs = self._input_kwargs
         return self._set(**kwargs)
 
     def countValues(self, dataset):
