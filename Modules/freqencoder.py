@@ -4,7 +4,7 @@ from pyspark.ml.pipeline import Transformer
 from pyspark.ml.param.shared import HasInputCol, HasOutputCol, Param
 from pyspark.sql.functions import udf
 from io_modules import CountOutput
-        
+
 # Create a custom word count transformer class
 class FreqEncoder(Estimator, HasInputCol, HasOutputCol):
 
@@ -62,5 +62,3 @@ class FreqEncoderModel(Transformer, HasInputCol, HasOutputCol):
         udf_map = udf(lambda value: mapValue(value, bins), Long())
 
         return dataset.withColumn(out_col, udf_map(in_col))
-        out_col = self.getOutputCol()
-        in_col = dataset[self.getInputCol()
