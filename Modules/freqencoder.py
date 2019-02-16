@@ -1,7 +1,6 @@
 import json
 from pyspark import keyword_only
-from pyspark.ml.pipeline import Estimator, Model, Pipeline
-from pyspark.ml.pipeline import Transformer
+from pyspark.ml.pipeline import Estimator, Model, Pipeline, Transformer
 from pyspark.ml.param.shared import HasInputCol, HasOutputCol, Param
 from pyspark.sql.functions import udf, count
 from io_modules import CountOutput
@@ -36,7 +35,7 @@ class FreqEncoder(Estimator, HasInputCol, HasOutputCol):
         bin_dict = {}
         for row in bins:
             bin_dict[row[0]] = row[1]
-        
+
         in_col = dataset[self.getInputCol()]
 
         self.exportBins(bin_dict)
@@ -64,7 +63,6 @@ class FreqEncoderModel(Transformer, HasInputCol, HasOutputCol):
         in_col = dataset[self.getInputCol()]
         # Define transformer
         bins = self.readBin()
-        print bins
         udf_map = udf(lambda value: mapValue(value, bins), IntegerType())
 
         return dataset.withColumn(out_col, udf_map(in_col))

@@ -46,7 +46,7 @@ def update_graph(Feature):
         conn = MySQLdb.connect(host="ec2-34-211-3-37.us-west-2.compute.amazonaws.com",
                                user="USERNAME", passwd="PASSWORD", db=dbName)
         cursor = conn.cursor()
-        get_table = get_latestfile("")
+        get_table = get_latestfile()
         cursor.execute("select COUNT({}) FROM {} GROUPBY {}".format(Feature, get_table, Feature));
         plot_data = dict(cursor.fetchall())
         cursor.execute("select COUNT({}) FROM {}".format(Feature, get_table));

@@ -12,7 +12,7 @@ from pyspark.sql.functions import col
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SQLContext, SparkSession, Row, Column
 from pyspark.sql.types import *
-from pyspark.ml.feature import VectorAssembler, StringIndexer
+from pyspark.ml.feature import VectorAssembler, MinMaxScaler
 from pyspark.ml.classification import LogisticRegression
 from pyspark.ml import Pipeline
 from pyspark.ml.evaluation import BinaryClassificationEvaluator
@@ -21,6 +21,7 @@ from time_track import *
 from io_modules import *
 import mysql.connector
 import datetime
+from freqencoder import FreqEncoder, FreqEncoderModel
 
 
 class CleanData:
@@ -29,13 +30,17 @@ class CleanData:
         self.exclude = exclude_key_list
         # True or False
 
-    def exclude_cols(self):
+    def fill_null(self):
         df = self.features
+        cols = df.columns
+        for col in cols:
+            df = df.fillna({col:0.5})
+        return df
+
+    def exclude_cols(self):
+        df = self.fill_nul()
         e_list = self.exclude
-        remove_label = df.select([col for col in df.columns if col not in e_list])
-        for col in remove_label.columns:
-            remove_label = remove_label.fillna({col:0.5})
-        return remove_label
+        return df.select([col for col in df.columns if col not in e_list])
 
     def count_cols(self):
         train_data = self.exclude_cols()
@@ -48,62 +53,19 @@ class CleanData:
                 numerical_cols.append(types[0])
         return categorical_cols, numerical_cols
 
-    # Count disctinct for strings and save to HDFS json
-    # Map count for categorical variables
-    def map_category_train(self):
-        para_dict = {}
-        mapped_trn = self.exclude_cols()
-        categorical_cols, numerical_cols = self.count_cols()
-        for col in categorical_cols:
-            one_col = mapped_trn.select(col)
-            category_dict = one_col.grouBy().count()
-            para_dict[col] = category_dict
-            mapped_col=one_col.na.replace(category_dict, 1)
-            mapped_trn.withColumn(col+"_mapped",mapped_col)
-        output = CountOutput()
-        with open(output.output_name(), 'w') as f:
-            json.dump(para_dict, f)
-        return mapped_trn
-
-    # Replace NULL category with Empty (steaming only )
-    # Map to count values
-    def map_category_pred(self):
-        output = CountOutput()
-        para_json = output.read_file()
-        mapped_str=self.exclude_cols()
-        if para_json != {}:
-            for key in para_json.keys():
-                one_col = mapped_str.select(key)
-                mapped_col=one_col.na.replace(para_json[key], 1)
-                mapped_str.withColumn(key+"_mapped",mapped_col)
-        return mapped_str
-
-    # Without customized module
+    # With customized encoder
     def build_pipeline(self):
-        final = self.map_category_pred()
-        categorical_cols, numerical_cols = self.count_cols()
-        stages = []
-        selected_cols = [ c + "_mapped" for c in categorical_cols]+[ c for c in numerical_cols ]
-        for col in selected_cols:
-            norm_feature = MinMaxScaler(inputCol = col, outputCol=col + "_norm")
-            stages +=[norm_feature]
-        finalized_cols = [ c + "_norm" for c in selected_cols ]
-        assembler = VectorAssembler(inputCols=finalized_cols, outputCol="features_vec")
-        stages +=[assembler]
-        pipeline = Pipeline(stages = stages)
-        return pipeline
-
-    # With feature library to simplify
-    def build_pipeline_sp(self):
-        train_data = self.exclude_cols()
         categorical_cols, numerical_cols = self.count_cols()
         stages = []
         for col in categorical_cols:
-            encoder = StringIndexer(inputCol = col, outputCol = col+"_cleaned")
+            encoder = FreqEncoder(inputCol = col, outputCol = col+"_cleaned")
             stages += [encoder]
         finalized_cols = [ c + "_cleaned" for c in categorical_cols ] + [ c for c in numerical_cols]
         assembler = VectorAssembler(inputCols=finalized_cols, outputCol="features_vec")
         stages += [assembler]
+        lr = LogisticRegression(featuresCol = "features_vec", labelCol="HasDetections",
+                        maxIter=10 )
+        stages += [lr]
         pipeline = Pipeline(stages = stages)
         return pipeline
 
@@ -135,40 +97,34 @@ def main():
     #exclude_key_list = ["MachineIdentifier", "CSVId", "HasDetections]
     exclude_key_list = ["HasDetections"]
     data = df.select(initial_cols)
-    features = CleanData(data, exclude_key_list)
+    train, test = data.randomSplit([0.7, 0.3], seed = 1000)
 
-    data = features.exclude_cols()
-    clean_pipeline = features.build_pipeline_sp()
-    pipelineModel = clean_pipeline.fit(data)
-
-    # Need to convert string to doubles, otherwise Pyspark UDF will show errors
-    data_new = data.select(*(col(c).cast("float").alias(c) for c in data.columns))
-    final_feature = pipelineModel.transform(data_new)
-
+    # Training
+    cleandata = CleanData(train, exclude_key_list)
+    train = cleandata.fill_null()
+    clean_pipeline = cleandata.build_pipeline()
+    pipelineModel = clean_pipeline.fit(train)
     output = PiplModel()
     pipelineModel.save(output.output_name())
 
+    timestamp = time_func.encode_timestamp()
+    toMysql(train, timestamp, True)
+
     timedelta, timeend = run_time(timestart)
-    print "Time taken to build pipeline: " + str(timedelta) + " seconds"
+    print "Time taken to build pipeline and train: " + str(timedelta) + " seconds"
 
-    train, test = final_feature.randomSplit([0.7, 0.3], seed = 1000)
-
-    lr = LogisticRegression(featuresCol = "features_vec", labelCol = "HasDetections",
-                            maxIter=10 )
-    lrModel = lr.fit(train)
+    # Validation
+    cleandata_test = CleanData(test, exclude_key_list)
+    test = cleandata_test.fill_null()
+    # Need to convert string to doubles, otherwise Pyspark UDF will show errors
+    test_new = test.select(*(col(c).cast("float").alias(c) for c in test.columns))
+    prediction = pipelineModel.transform(test_new)
 
     timedelta, timeend = time_func.run_time(timeend)
-    print "Time taken to train the model: " + str(timedelta) + " seconds"
-
-    validation = lrModel.transform(test)
-    evaluator = BinaryClassificationEvaluator()
-    print('Test Area Under ROC', evaluator.evaluate(validation))
-
-    output = mlMOdel()
-    lrModel.save(sc, output.output_name())
+    print "Time taken to validate the model: " + str(timedelta) + " seconds"
 
     timestamp = time_func.encode_timestamp()
-    toMysql(df, timestamp, True)
+    toMysql(test, timestamp, True)
 
 if __name__ == "__main__":
     main()
