@@ -38,7 +38,7 @@ class CleanData:
         return df
 
     def exclude_cols(self):
-        df = self.fill_nul()
+        df = self.fill_null()
         e_list = self.exclude
         return df.select([col for col in df.columns if col not in e_list])
 
@@ -103,7 +103,9 @@ def main():
     cleandata = CleanData(train, exclude_key_list)
     train = cleandata.fill_null()
     clean_pipeline = cleandata.build_pipeline()
-    pipelineModel = clean_pipeline.fit(train)
+    train_new = train.select(*(col(c).cast("float").alias(c) for c in train.columns))
+
+    pipelineModel = clean_pipeline.fit(train_new)
     output = PiplModel()
     pipelineModel.save(output.output_name())
 

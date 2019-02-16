@@ -11,7 +11,7 @@ spark = SparkSession.builder.appName("ReadData").getOrCreate()
 data = [
     ("Tax", 15.0, 3.7),
     ("Tax", 10.2, 4.5),
-    ("Food", 3.2, 2),
+    ("Food", 3.2, 2.0),
     ("Moon", 5.4, 1.7),
     ("Tax", 8.6, 5.3),
     ("Moon", 7.5, 3.0),
@@ -31,7 +31,8 @@ indexer = FreqEncoder().setInputCol("cat").setOutputCol("count_cat")
 stages += [indexer]
 assembler = VectorAssembler(inputCols=["count_cat","num"],outputCol="feature")
 stages += [assembler]
-lr = LinearRegression(featuresCol = "feature", labelCol="result",maxIter=3 )
+lr = LinearRegression(featuresCol = "feature", labelCol="label", maxIter=3 )
+stages += [lr]
 pipeline = Pipeline(stages = stages)
 
 model2 = pipeline.fit(df)
