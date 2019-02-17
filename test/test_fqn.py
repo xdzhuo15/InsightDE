@@ -19,9 +19,7 @@ output1.show()
 stages = []
 indexer = FreqEncoder().setInputCol("Cat").setOutputCol("Count_cat")
 stages += [indexer]
-scaler = MinMaxScaler().setInputCol(["Count_cat","Num"]).setOutputCol(["Cat_norm","Num_norm"])
-stages += [scaler]
-assembler = VectorAssembler(inputCols=["Cat_norm","Num_norm"],outputCol="Features")
+assembler = VectorAssembler(inputCols=["Count_cat","Num"],outputCol="Features")
 stages += [assembler]
 lr = LinearRegression(featuresCol = "Features", labelCol="Label", maxIter=3 )
 stages += [lr]

@@ -4,7 +4,7 @@ from pyspark.ml.pipeline import Estimator, Model, Pipeline, Transformer
 from pyspark.ml.param.shared import HasInputCol, HasOutputCol, Param
 from pyspark.sql.functions import udf, count
 from io_modules import CountOutput
-from pyspark.sql.types import MapType, StringType, IntegerType
+from pyspark.sql.types import StringType, IntegerType
 
 # Create a custom word count transformer class
 class FreqEncoder(Estimator, HasInputCol, HasOutputCol):
