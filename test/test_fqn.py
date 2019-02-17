@@ -5,10 +5,17 @@ import pyspark
 from pyspark import SparkConf
 from pyspark.ml import Pipeline
 from pyspark.ml.regression import LinearRegression
+from pyspark.sql.types import *
 
 spark = SparkSession.builder.appName("ReadData").getOrCreate()
 
-df = spark.read.csv("data_fq.csv", header = True)
+Schema = StructType([
+          StructField('Cat', StringType()),
+          StructField('Num', DoubleType()),
+          StructField('Label', DoubleType())
+          ])
+
+df = spark.read.csv("data_fq.csv", header = True, schema=Schema)
 df.show()
 
 encoder = FreqEncoder().setInputCol("Cat").setOutputCol("Count_cat")
