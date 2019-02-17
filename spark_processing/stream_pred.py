@@ -18,11 +18,10 @@ from batch_train import CleanData
 from pyspark.ml import Pipeline
 from pyspark.ml.classification import LogisticRegression, LogisticRegressionModel
 import mysql.connector
+from pyspark.ml.feature import VectorAssembler, MinMaxScaler, StringIndexer
 import datetime
-from freqencoder import FreqEncoder, FreqEncoderModel
 
-# Make predictions on each microbatch from streaming
-def predict_risk(rdd, pipelineModel):
+def predict_risk(rdd, lrModel, pipelineModel, timestamp):
     ss = SparkSession(rdd.context)
     if rdd.isEmpty():
         return
@@ -36,14 +35,16 @@ def predict_risk(rdd, pipelineModel):
                     "GeoNameIdentifier", "OsBuildLab"]
 
     exclude_key_list = []
-    cleandata = CleanData(df, exclude_key_list)
-    data = cleandata.fill_null()
-    # Need to convert string to doubles, otherwise Pyspark UDF will show errors
-    data_new = data.select(*(col(c).cast("float").alias(c) for c in data.columns))
-    prediction = pipelineModel.transform(data_new)
 
-    timestamp = encode_timestamp()
-    toMysql(data_new, timestamp, False)
+    features = CleanData(df.select(initial_cols), exclude_key_list)
+    data = features.exclude_cols()
+
+    data_new = data.select(*(col(c).cast("float").alias(c) for c in data.columns))
+
+    transformed_features = pipelineModel.transform(data_new)
+    HasDetections = lrModel.transform(transformed_features)
+
+    toMysql(HasDetections, timestamp, False)
 
 
 conf = SparkConf().setAppName("prediction").setMaster(
@@ -53,7 +54,9 @@ sc = SparkContext(conf=conf)
 sc.setLogLevel("WARN")
 ssc = StreamingContext(sc, 1)
 
-#load saved pipeline
+#load saved pipeline, model, and parameters
+lrModel = mlMOdel()
+savedModel = LogisticRegressionModel.load(sc, lrModel.data_file())
 pipe = PiplModel()
 pipelineModel = Pipeline.read.load(pipe.data_file())
 
@@ -61,7 +64,7 @@ kafka_stream = KafkaUtils.createDirectStream(ssc, ["DeviceRecord"],
             {"metadata.broker.list":"ip-10-0-0-7:9092,ip-10-0-0-11:9092,ip-10-0-0-10:9092"})
 kafka_stream.map(lambda (key, value): json.loads(value))
 kafka_stream = get_kafkastream()
-kafka_stream.foreachRDD(lambda x: predict_risk(x))
-
+timestampe = encode_timestamp()
+kafka_stream.foreachRDD(lambda x: predict_risk(x, lrModel, pipelineModel, timestamp))
 ssc.start()
 ssc.awaitTermination()

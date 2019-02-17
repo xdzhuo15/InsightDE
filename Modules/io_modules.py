@@ -63,7 +63,7 @@ def toMysql(df, timestamp, isTrain ="True"):
     timestamp = encode_timestamp()
     if isTrain == True:
         db_name = "Training"
-        mood = "write"
+        save_mode = "write"
     else:
         db_name = "Prediction"
         save_mode = "append"
