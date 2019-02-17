@@ -19,7 +19,7 @@ bucket = s3.Bucket("microsoftpred")
 test_obj = s3.Object(bucket, file_name)
 
 conf = SparkConf().setAppName("training").setMaster(
-        "spark://ec2-52-10-44-193.us-west-2.compute.amazonaws.com:7077"
+        "MYSPRAK_ADDRESS:7077"
         )
 
 spark = SparkSession.builder.appName("training").getOrCreate()
@@ -27,6 +27,3 @@ spark = SparkSession.builder.appName("training").getOrCreate()
 df = spark.read.csv(test_obj.key, header=True, schema=Schema)
 df.printSchema()
 df.select("AvSigVersion","IsBeta","CityIdentifier").show()
-
-
-

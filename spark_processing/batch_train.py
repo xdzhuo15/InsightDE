@@ -118,7 +118,7 @@ def main():
     test_obj = s3.Object(bucket, file_name)
 
     conf = SparkConf().setAppName("training").setMaster(
-            "spark://ec2-52-10-44-193.us-west-2.compute.amazonaws.com:7077"
+            "MYSPARK_ADRESS:7077"
             )
     sc = SparkContext(conf=conf)
     spark = SparkSession.builder.appName("training").getOrCreate()
