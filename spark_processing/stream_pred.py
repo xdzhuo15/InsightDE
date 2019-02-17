@@ -48,7 +48,7 @@ def predict_risk(rdd, lrModel, pipelineModel, timestamp):
 
 
 conf = SparkConf().setAppName("prediction").setMaster(
-            "spark://ec2-52-10-44-193.us-west-2.compute.amazonaws.com:7077"
+            "MYSPARK_ADRESS:7077"
             )
 sc = SparkContext(conf=conf)
 sc.setLogLevel("WARN")
@@ -61,7 +61,7 @@ pipe = PiplModel()
 pipelineModel = Pipeline.read.load(pipe.data_file())
 
 kafka_stream = KafkaUtils.createDirectStream(ssc, ["DeviceRecord"],
-            {"metadata.broker.list":"ip-10-0-0-7:9092,ip-10-0-0-11:9092,ip-10-0-0-10:9092"})
+            {"metadata.broker.list":"LIST_PRIVATE_IP_OF_BROKERS"})
 kafka_stream.map(lambda (key, value): json.loads(value))
 kafka_stream = get_kafkastream()
 timestampe = encode_timestamp()

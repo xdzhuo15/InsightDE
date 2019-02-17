@@ -42,11 +42,3 @@ print "showing prediction"
 prediction.show()
 print "showing original dataframe"
 df.show()
-
-#assembler = VectorAssembler(inputCols =["count_cat","num"], outputCol="feature")
-#model2 = assembler.fit(output1)
-#output2 = model2.transform(output1)
-
-#output2.show()
-#print "showing original dataframe"
-#df.show()
