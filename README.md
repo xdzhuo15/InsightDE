@@ -1,4 +1,5 @@
 FreqEncoder
+
 A Customized Pyspark Transformer for Streamlined Machine Learning Pipelines
 
 Problem statement:
