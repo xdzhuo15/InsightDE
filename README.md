@@ -1,22 +1,16 @@
-Automate Malware Prediction System
+FreqEncoder
+A Customized Pyspark Transformer for Streamlined Machine Learning Pipelines
 
-Use Case: Cyber attacks happen once every 39 seconds, affecting one out of three American businesses each year, and the cost of a data breach averages at $1.3 million. In this Insight project, I used malware attack data collected from more than 16.8 million windows devices to build a real-time malware risk monitoring system for enterprises and mission-critical applications. I used a distributed system to productize and optimize predictive algorithms so that risk monitoring can be achieved reliably and effectively.
+Problem statement:
+In this Insight Data Engineering project, I used spark transformers to build a data cleaning, feature engineering and machine learning pipleine to scale the Microsoft Malware Prediction algorithm. The benefits of using the transformers in the spark libraries include high readability of modularized code, streamlined process to reduce errors, and reductions of repartitioning and bottleneck without completely reinveting the wheel. However, spark only offers limited data cleaning and feature engineering transformer packages, which means we need to cutomize transformers accroding to the needs of our algorithms.
 
-The vaule of the system not only lies in the ability to predict risk of malware attack but also the backend data analytics based on A/B testing to compare machines that have been detected vs. not detected, so that risk stratification and insights for computer volunerability can be derived by internal experts.
+In this project, I customized a freqnecy encoder (FreqEncoder) based on the existing StringIndexer with pyspark. This transformer converts each unique value of a categorical variable into its respective counts in the training data, or the frequencies of occurence. Compared to StringIndexer which converts categorical variables into a pre-assigned number based on alphabetical order or sorted frequency, FreqEncoder captures the variability of the data without enforcing additional assumptions. This can be extremely useful when the categories inside the data have no particular seniority or priority relationship.
 
-Data Source: Microsoft Malware Prediction, 10GB: https://www.kaggle.com/c/microsoft-malware-prediction
+Tech Stack:
+To build a production ready machine learning pipeline, I used spark as the powerhouse for both training and real-time predctions. I used Kafka to simulate input of thousands of users and stream the data to spark for real-time prediction. I used MySQL as the data sink and flask with dash for results visulization. The web UI compares the distribution of training and prediction data of top 10 features as well as the malware outcomes (has or no detections), so thst we can know when the model needs retraining.
 
-Assuming a system that runs its modole and update everyday, and we are looking at a data processing volume of 16.8million messages per day.
+The functions of FreqEncoder:
 
-Technical Stacks:
 
-Kafka streaming: simulate incoming information of new users
-Spark streaming: predicts malware risks
-Spark batch processing: regular retraining of prediction model
-Airflow: scheduling retraining
-Flask: prediction time, alerts of high risk incidences, training status, training time
-Technical Challenges:
 
-The system can handle large number of users with no latency (10M/day within seconds of response)
-Automate training to ensure quality prediction
-Performace tracking to help identify problems during calculation
+
