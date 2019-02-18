@@ -10,6 +10,6 @@ import datetime
 def encode_timestamp():
     return unicode(datetime.datetime.now()).replace(" ","").replace(":","")
 
-def run_time(time_start):
+def run_time(timestart):
         timeend = datetime.datetime.now()
         return round((timeend-timestart).total_seconds(), 2), timeend

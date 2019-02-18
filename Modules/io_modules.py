@@ -22,7 +22,10 @@ class IoObject:
         self.folder_path = ""
         self.file_path = ""
         self.file_suf = ""
+
+    def data_file(self):
         self.data_file = get_latestfile(self.folder_path)
+        return self.data_file
 
     def output_name(self):
         timestamp = encode_timestamp()
@@ -34,16 +37,15 @@ class mlMOdel(IoObject):
         self.folder_path = "/home/ubuntu/model/model/"
         self.file_path = "/home/ubuntu/model/model/lrm_model_"
         self.file_suf = ""
-        self.data_file = get_latestfile(self.folder_path)
 
 class CountOutput(IoObject):
     def __init__(self):
         self.folder_path = "/home/ubuntu/model/para/"
         self.file_path = "/home/ubuntu/model/para/feature_para_"
         self.file_suf = ".json"
-        self.data_file = get_latestfile(self.folder_path)
 
     def read_file(self):
+        self.data_file = self.data_file()
         try:
             with open(self.data_file) as f:
                 para_json = json.loads(f.read())
@@ -57,7 +59,7 @@ class PiplModel(IoObject):
         self.folder_path = "/home/ubuntu/model/pipeline/"
         self.file_path = "/home/ubuntu/model/pipeline/pipeline_model_"
         self.file_suf = ""
-        self.data_file = get_latestfile(self.folder_path)
+
 
 def toMysql(df, timestamp, isTrain ="True"):
     timestamp = encode_timestamp()
