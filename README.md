@@ -9,8 +9,12 @@ In this project, I customized a freqnecy encoder (FreqEncoder) based on the exis
 Tech Stack:
 To build a production ready machine learning pipeline, I used spark as the powerhouse for both training and real-time predctions. I used Kafka to simulate input of thousands of users and stream the data to spark for real-time prediction. I used MySQL as the data sink and flask with dash for results visulization. The web UI compares the distribution of training and prediction data of top 10 features as well as the malware outcomes (has or no detections), so thst we can know when the model needs retraining.
 
+Data Source:
+
 The functions of FreqEncoder:
 
+
+Future steps:
 
 
 
