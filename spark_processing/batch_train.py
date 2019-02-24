@@ -142,7 +142,7 @@ def main():
     pipelineModel = clean_pipeline.fit(data)
 
     # Need to convert string to doubles, otherwise Pyspark UDF will show errors
-    data_new = data.select(*(col(c).cast("float").alias(c) for c in data.columns))
+    data_new = df.select(*(col(c).cast("float").alias(c) for c in df.columns))
     final_feature = pipelineModel.transform(data_new)
 
     output = PiplModel()
