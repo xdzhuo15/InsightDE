@@ -70,7 +70,7 @@ def toMysql(df, timestamp, isTrain ="True"):
         db_name = "Prediction"
         save_mode = "append"
     df.write.format('jdbc').options(
-            url="jdbc:mysql://ec2-34-211-3-37.us-west-2.compute.amazonaws.com:3306/{}".format(db_name),
+            url="MYSQL_ADDRESS".format(db_name),
             driver='com.mysql.cj.jdbc.Driver',
             dbtable="Data_"+timestamp,
             user="USERNAME",
