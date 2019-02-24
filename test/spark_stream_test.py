@@ -39,7 +39,7 @@ sc.setLogLevel("WARN")
 ssc = StreamingContext(sc, 5)
 
 kafka_stream = KafkaUtils.createDirectStream(ssc, 
-    ["DeviceRecord"], {"metadata.broker.list":"ip-10-0-0-7:9092,ip-10-0-0-11:9092,ip-10-0-0-10:9092"})
+    ["DeviceRecord"], {"metadata.broker.list":"LIST_OF_BROKERS"})
 
 kafka_stream = kafka_stream.map(lambda (key, value): json.loads(value))
 
