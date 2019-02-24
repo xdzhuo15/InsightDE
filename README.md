@@ -9,7 +9,7 @@ Therefore, I customized a freqnecy encoder (FreqEncoder) based on the existing S
 
 #### Tech Stack:
 To build a production ready machine learning pipeline, I used spark as the powerhouse for both training and real-time predctions. I used Kafka to simulate input of thousands of users and stream the data to spark for real-time prediction. I used MySQL as the data sink and flask with dash for results visulization. The web UI compares the distribution of training and prediction data of top 10 features as well as the malware outcomes (has or no detections), so thst we can know when the model needs retraining.
-![alt text](http://url/to/img.png)
+![alt text](https://github.com/xdzhuo15/InsightDE/blob/master/pics/tech_stack.png)
 
 #### Data Source:
 The data is the [Microsoft Malware Prediction](https://www.kaggle.com/c/microsoft-malware-prediction) challenge posted on Kaggle, and it has 80 columns of features describing the conditions of the windows computer, the majority of which are categorical variables with a few to tens of thousands of unique values. If we use the existing OneHotEncoder in the Pyspark library, the required computation resources will grow exponentially, and it cannot handle null values and will crash the other transformers chained to it. If we use StringIndexer, which only converts into one column of numerical values and has the option of filling null values, in this Microsoft data, a numerical value assigned to any unique value can introduce unwanted assumptions and weights.    
