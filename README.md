@@ -22,9 +22,10 @@ There are two ways to write the FreqEncoder in Pyspark: writing scalar codes wit
 1. Convert categorical variables into one column of numerical value that captures the variability of the data only (counts of each unique value)
 2. Fill null values with 0 
 3. Easily chainable with other transformers
-4. Offers the option of returning frequency (counts divided by total count of rows in training data) as float
+4. Offers the option of returning frequency (counts divided by total count of training data) as float
 
-Below is an example of data with one categorical value, one numerical value, and one label, and I used a pipeline consisted of FreqEncoder, VectorAssembler, and LinerRegression to fit and transform to generate predictions. 
+Below is an example of data with one categorical value, one numerical value, and one label, and I used a pipeline consisted of FreqEncoder, VectorAssembler, and LinerRegression to fit and transform to generate predictions. After setting up the pipeline, we fit raw data with the pipeline, and then when we transform the pipeline, it will populate the result of each transformer into new columns, including the final regression results.   
+
 
 
 ![alt text](https://github.com/xdzhuo15/InsightDE/blob/master/pics/chained.png)
